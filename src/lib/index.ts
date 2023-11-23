@@ -1,22 +1,9 @@
 export const notes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const;
 
-export const enharmonicLabels = [
-  'C',
-  'C♯/D♭',
-  'D',
-  'D♯/E♭',
-  'E',
-  'F',
-  'F♯/G♭',
-  'G',
-  'G♯/A♭',
-  'A',
-  'A♯/B♭',
-  'B'
-];
+export const enharmonicLabels = [ 'C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B' ];
+export const majorKeyLabels = [ 'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B' ];
 
 export const whiteKeys =  [0, 2, 4, 5, 7, 9, 11];
-export const blackKeys =  [1, 3, 6, 8, 10];
 
 export const noteLabels = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
@@ -29,6 +16,10 @@ export enum accidental {
 
 export function getEnharmonicLabel(note: Note) {
   return enharmonicLabels[notes.indexOf(note)]
+}
+
+export function getMajorKeyLabel(note: Note) {
+  return majorKeyLabels[notes.indexOf(note)]
 }
 
 export function getNoteLabel(tonic: Note, note: Note) {

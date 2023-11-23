@@ -19,6 +19,15 @@ main {
   cursor: pointer;
   background-color: #fff;
   margin-right: -8px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: end;
+}
+
+.key--4,
+.key--11 {
+  margin-right: -1px;
 }
 
 .black {
@@ -31,13 +40,53 @@ main {
   left: 8px;
 }
 
-.inScale {
-  background-color: red;
+.in-scale::before {
+  display: block;
+  position: absolute;
+  top: -1px;
+  content: '';
+  width: 100%;
+  height: 100%;
+  background: green;
+  opacity: 0.5;
 }
 
-.cls-1 {
+.scale-labels span {
+  margin-right: 1em;
+}
+
+.bar-line {
     fill: none;
     stroke: #000;
     stroke-miterlimit: 10;
     stroke-width: 2px;
+}
+
+.ivory-label {
+  transition: opacity 0.2s;
+  opacity: 0;
+}
+
+.show.ivory-label {
+  opacity: 1;
+}
+
+.white .ivory-label {
+  color: #222;
+}
+
+.black .ivory-label {
+  color: #cfcfcf;
+}
+
+.settings-controls {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+.octaves-controls {
+  position: absolute;
+  right: 0;
+  bottom: 0;
 }

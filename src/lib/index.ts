@@ -1,7 +1,22 @@
 export const notes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const;
+
+export const enharmonicLabels = [
+  'C',
+  'C♯/D♭',
+  'D',
+  'D♯/E♭',
+  'E',
+  'F',
+  'F♯/G♭',
+  'G',
+  'G♯/A♭',
+  'A',
+  'A♯/B♭',
+  'B'
+];
+
 export const whiteKeys =  [0, 2, 4, 5, 7, 9, 11];
 export const blackKeys =  [1, 3, 6, 8, 10];
-
 
 export const noteLabels = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
@@ -10,6 +25,10 @@ export type Note = typeof notes[number];
 export enum accidental {
   SHARP = '♯',
   FLAT = '♭'
+}
+
+export function getEnharmonicLabel(note: Note) {
+  return enharmonicLabels[notes.indexOf(note)]
 }
 
 export function getNoteLabel(tonic: Note, note: Note) {
@@ -34,12 +53,22 @@ export function flatten(note: Note) {
   return `${noteLabels[idx]}${accidental['FLAT']}`
 }
 
-export function getMajorScale(tonic: Note) {
+export function getMajorScaleNotes(tonic: Note) {
   const intervals = [0, 2, 4, 5, 7, 9, 11];
 
   return intervals.map(interval => getNoteFromInterval(tonic, interval))
 }
 
+export function getMajorScale(tonic: Note) {
+  const scaleNotes = getMajorScaleNotes(tonic);
+  const scaleLabels = scaleNotes.map(n => getNoteLabel(tonic, n));
+
+  return {
+    scaleNotes,
+    scaleLabels
+  }
+}
+
 export function getNoteFromInterval(tonic: Note, interval: number) {
-  return (tonic + interval) % 12
+  return ((tonic + interval) % 12) as Note
 }

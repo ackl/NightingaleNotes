@@ -3,11 +3,58 @@ export const notes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const;
 export const enharmonicLabels = [ 'C', 'C#/Db', 'D', 'D#/Eb', 'E', 'F', 'F#/Gb', 'G', 'G#/Ab', 'A', 'A#/Bb', 'B' ];
 export const majorKeyLabels = [ 'C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B' ];
 
+export enum INTERVALS {
+  THIRD_MINOR = 3,
+  THIRD_MAJOR = 4,
+  FOURTH_PERFECT = 5,
+  TRITONE = 6,
+  FIFTH_PERFECT = 7
+}
+
+export enum CHORD_TYPE_ENUM {
+  MAJOR = 'M',
+  MINOR = 'm',
+  DIM = 'd'
+}
+
+type CHORD_TYPE =`${CHORD_TYPE_ENUM}`;
+
+export const CHORD_TYPE_INTERVALS_MAP = {
+  [CHORD_TYPE_ENUM.MAJOR]: [0, INTERVALS.THIRD_MAJOR, INTERVALS.FIFTH_PERFECT],
+  [CHORD_TYPE_ENUM.MINOR]: [0, INTERVALS.THIRD_MINOR, INTERVALS.FIFTH_PERFECT],
+  [CHORD_TYPE_ENUM.DIM]: [0, INTERVALS.THIRD_MINOR, INTERVALS.TRITONE]
+}
+
+export function buildChord(root: Note, chordType: CHORD_TYPE) {
+  const intervals = CHORD_TYPE_INTERVALS_MAP[chordType]
+
+  return intervals.map(i => getNoteFromInterval(root, i))
+}
+
+export function buildDiatonicTriads(scale: ScaleNotes) {
+  return scale.map((root, i) => {
+    const chordType = diatonicChordTypes[i];
+    return buildChord(root as Note, chordType)
+  });
+}
+
+export const diatonicDegreeNames = [
+'Tonic',
+'Supertonic',
+'Mediant',
+'Subdominant',
+'Dominant',
+'Submediant',
+'Leading tone',
+'Tonic',
+]
+export const diatonicChordRomanNumerals = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°']
+export const diatonicChordTypes: CHORD_TYPE[] = ['M', 'm', 'm', 'M', 'M', 'm', 'd']
+
+// can also use this as the intervals of a Maj scale
 export const whiteKeys =  [0, 2, 4, 5, 7, 9, 11];
 
 export const noteLabels = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
-
-export type Note = typeof notes[number];
 
 export enum accidental {
   SHARP = '♯',
@@ -45,9 +92,7 @@ export function flatten(note: Note) {
 }
 
 export function getMajorScaleNotes(tonic: Note) {
-  const intervals = [0, 2, 4, 5, 7, 9, 11];
-
-  return intervals.map(interval => getNoteFromInterval(tonic, interval))
+  return whiteKeys.map(interval => getNoteFromInterval(tonic, interval))
 }
 
 export function getMajorScale(tonic: Note) {
@@ -60,6 +105,6 @@ export function getMajorScale(tonic: Note) {
   }
 }
 
-export function getNoteFromInterval(tonic: Note, interval: number) {
-  return ((tonic + interval) % 12) as Note
+export function getNoteFromInterval(lower: Note, interval: number) {
+  return ((lower + interval) % 12) as Note
 }

@@ -1,34 +1,49 @@
 import { useState, useEffect, useContext, createContext } from 'react'
 import type { ReactNode } from 'react'
-import { notes, getMajorScale, whiteKeys, getNoteLabel, getEnharmonicLabel, getMajorKeyLabel } from './lib';
-import type { Note } from './lib';
+import {
+  notes,
+  getMajorScale,
+  whiteKeys,
+  getNoteLabel,
+  getEnharmonicLabel,
+  getMajorKeyLabel,
+  buildDiatonicTriads,
+  diatonicChordRomanNumerals,
+  diatonicDegreeNames
+} from './lib';
 import abcjs from 'abcjs';
 import './App.css'
 
 function Ivory({
   note,
-  tonic,
   isFirstOctave,
   isLastOctave,
-  scaleNotes
 }: {
   note: Note,
-  tonic: Note,
   isFirstOctave: boolean,
   isLastOctave: boolean,
-  scaleNotes?: ScaleNotes
 }) {
   const isWhiteKey = whiteKeys.includes(note);
   const {showIvoryLabels, onlyInKey} = useContext(SettingsContext);
-  const {setTonic} = useContext(NotesContext);
+  const {tonic, setTonic, scale, chord} = useContext(NotesContext);
 
-  let isNoteInScale = scaleNotes?.includes(note);
-  if (isFirstOctave && (note < tonic)) isNoteInScale = false;
-  if (isLastOctave && (note > tonic)) isNoteInScale = false;
+  let isNoteInScale = scale?.scaleNotes.includes(note);
+  let isHighlight = true;
+
+  if (chord) {
+    isHighlight = chord.includes(note);
+    if (isFirstOctave && (note < chord[0])) isHighlight = false;
+    if (isLastOctave && (note > chord[0])) isHighlight = false;
+  } else {
+    isHighlight = scale?.scaleNotes.includes(note) || false;
+    if (isFirstOctave && (note < tonic)) isHighlight = false;
+    if (isLastOctave && (note > tonic)) isHighlight = false;
+  }
+
 
   return (
     <div
-      className={`key key--${note} ${isWhiteKey ? 'white' : 'black'}${isNoteInScale ? ' in-scale' : ''}`}
+      className={`key key--${note} ${isWhiteKey ? 'white' : 'black'}${isHighlight ? ' in-scale' : ''}`}
       onClick={() => {
         setTonic(note);
       }}
@@ -41,10 +56,8 @@ function Ivory({
 }
 
 function Octave(props: {
-  scaleNotes?: ScaleNotes,
   isFirstOctave: boolean,
   isLastOctave: boolean
-  tonic: Note
 }) {
   return (
     <>
@@ -61,13 +74,7 @@ function Octave(props: {
   )
 }
 
-function Keyboard({
-  tonic,
-  scale
-}: {
-  tonic: Note,
-  scale?: Scale
-}) {
+function Keyboard() {
   const { octaves } = useContext(SettingsContext);
 
   const els = [];
@@ -75,8 +82,6 @@ function Keyboard({
     els.push(
       <Octave
         key={i}
-        tonic={tonic}
-        scaleNotes={scale?.scaleNotes}
         isFirstOctave={i === 0}
         isLastOctave={i === (octaves - 1)}
       />
@@ -165,12 +170,16 @@ const SettingsProvider = ({ children }: { children: ReactNode }) => {
 interface NotesState {
   tonic: Note;
   setTonic: (arg: Note) => void;
+  diatonicChordRoot?: Note;
+  setDiatonicChordRoot: (arg?: Note) => void;
   scale?: Scale;
+  chord?: Chord
 }
 
 const initialNotesState: NotesState = {
   tonic: 0,
   setTonic: () => {},
+  setDiatonicChordRoot: () => {},
 }
 
 const NotesContext = createContext<NotesState>(initialNotesState);
@@ -178,14 +187,27 @@ const NotesContext = createContext<NotesState>(initialNotesState);
 const NotesProvider = ({ children }: { children: ReactNode }) => {
   const [tonic, setTonic] = useState<Note>(0);
   const [scale, setScale] = useState<Scale | undefined>();
+  const [diatonicChords, setDiatonicChords] = useState<Chord[] | undefined>();
+  const [diatonicChordRoot, setDiatonicChordRoot] = useState<Note | undefined>();
+  const [chord, setChord] = useState<Chord | undefined>();
 
   useEffect(() => {
     const scale = getMajorScale(tonic);
     setScale(scale);
+    setDiatonicChords(buildDiatonicTriads(scale.scaleNotes))
   }, [tonic]);
 
+  useEffect(() => {
+    if (diatonicChords && diatonicChordRoot !== undefined) {
+      setChord(diatonicChords[diatonicChordRoot]);
+    } else {
+      setChord(undefined);
+    }
+    console.log(diatonicChordRoot);
+  }, [diatonicChordRoot, diatonicChords]);
+
   return (
-    <NotesContext.Provider value={{tonic, setTonic, scale}}>
+    <NotesContext.Provider value={{tonic, setTonic, scale, chord, diatonicChordRoot, setDiatonicChordRoot}}>
       {children}
     </NotesContext.Provider>
   );
@@ -193,7 +215,7 @@ const NotesProvider = ({ children }: { children: ReactNode }) => {
 
 
 function App() {
-  const { tonic, scale, setTonic } = useContext(NotesContext);
+  const { tonic, setTonic, diatonicChordRoot, setDiatonicChordRoot } = useContext(NotesContext);
 
   return (
     <SettingsProvider>
@@ -217,10 +239,22 @@ function App() {
 
         <KeySignature tonic={tonic} />
 
-        <Keyboard
-          tonic={tonic}
-          scale={scale}
-        />
+        <Keyboard />
+        <div>
+          {diatonicChordRomanNumerals.map((label, i) => (
+            <button
+              onClick={() => {
+                if (diatonicChordRoot === i) {
+                  setDiatonicChordRoot();
+                } else {
+                  setDiatonicChordRoot(i as Note)
+                }
+              }}
+              className={`${diatonicChordRoot === i ? 'active' : ''}`}
+            >{label}</button>
+          ))}
+        </div>
+        <p>{diatonicChordRoot !== undefined && diatonicDegreeNames[diatonicChordRoot]}</p>
       </main>
     </SettingsProvider>
   )

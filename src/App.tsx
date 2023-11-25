@@ -47,7 +47,7 @@ function Ivory({
   return (
     <div
       className={
-        `key key--${note} ${isWhiteKey ? 'white' : 'black'}${isHighlight ? ' in-scale' : ''}${chord ? ' chord' : ''}`
+        `ivory ivory--${note} ${isWhiteKey ? 'white' : 'black'}${isHighlight ? ' in-scale' : ''}${chord ? ' chord' : ''}`
       }
       onClick={() => {
         setTonic(note);
@@ -173,6 +173,7 @@ const SettingsProvider = ({ children }: { children: ReactNode }) => {
       <button onClick={() => setOctaves((prev) => prev < 3 ? 2 : prev - 1)}>-</button>
     </div>
   }
+  console.log(tonality);
 
   return (
     <SettingsContext.Provider value={{
@@ -191,10 +192,13 @@ const SettingsProvider = ({ children }: { children: ReactNode }) => {
         <OctavesButtons />
       </div>
       <div className='tonality-controls'>
-        <p>current tonality: {tonality}</p>
+        <h3>tonality</h3>
         {Object.entries(TONALITY).map(([t, label]) => {
           return (
-            <button key={label} onClick={() => {
+            <button
+              key={label}
+              className={`${tonality === label ? 'active' : ''}`}
+              onClick={() => {
               setTonality(TONALITY[t as keyof typeof TONALITY])
             }}>{label}</button>
           )
@@ -244,18 +248,36 @@ const NotesProvider = ({ children }: { children: ReactNode }) => {
   return (
     <NotesContext.Provider value={{tonic, setTonic, scale, chord, diatonicChordRoot, setDiatonicChordRoot}}>
       {children}
+      <div className='diatonic-chords'>
+        <h3>diatonic triads</h3>
+        {getDiatonicChordRomanNumerals(tonality).map((label, i) => (
+          <button
+            key={label}
+            onClick={() => {
+              // set i as degree of scale for root of diatonic chords
+              if (diatonicChordRoot === i) {
+                setDiatonicChordRoot(undefined);
+              } else {
+                setDiatonicChordRoot(i as Note)
+              }
+            }}
+            className={`${diatonicChordRoot === i ? 'active' : ''}`}
+          >{label}</button>
+        ))}
+      </div>
+        <p className='degree-name'>{diatonicChordRoot !== undefined && diatonicDegreeNames[diatonicChordRoot]}</p>
     </NotesContext.Provider>
   );
 }
 
 
 function App() {
-  const {tonic, setTonic, diatonicChordRoot, setDiatonicChordRoot} = useContext(NotesContext);
+  const {tonic, setTonic} = useContext(NotesContext);
   const {tonality} = useContext(SettingsContext);
 
   return (
       <main>
-        <section>
+        <section className="key-selector">
           <label htmlFor="key">Select a key:</label>
           <select
             id="key"
@@ -275,23 +297,6 @@ function App() {
         <KeySignature />
 
         <Keyboard />
-        <div>
-          {getDiatonicChordRomanNumerals(tonality).map((label, i) => (
-            <button
-              key={label}
-              onClick={() => {
-                // set i as degree of scale for root of diatonic chords
-                if (diatonicChordRoot === i) {
-                  setDiatonicChordRoot();
-                } else {
-                  setDiatonicChordRoot(i as Note)
-                }
-              }}
-              className={`${diatonicChordRoot === i ? 'active' : ''}`}
-            >{label}</button>
-          ))}
-        </div>
-        <p>{diatonicChordRoot !== undefined && diatonicDegreeNames[diatonicChordRoot]}</p>
       </main>
     )
 }

@@ -56,6 +56,10 @@ main {
   height: calc(100% + 1px);
 }
 
+.ivory--tonic::before {
+  background: #b1ff00;
+}
+
 .chord.in-scale::before {
   background: blue;
 }

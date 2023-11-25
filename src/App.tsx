@@ -47,7 +47,14 @@ function Ivory({
   return (
     <div
       className={
-        `ivory ivory--${note} ${isWhiteKey ? 'white' : 'black'}${isHighlight ? ' in-scale' : ''}${chord ? ' chord' : ''}`
+        `
+        ivory
+        ivory--${note}
+        ${isWhiteKey ? 'white' : 'black'}
+        ${isHighlight ? ' in-scale' : ''}
+        ${chord ? ' chord' : ''}
+        ${tonic === note ? 'ivory--tonic' : ''}
+        `
       }
       onClick={() => {
         setTonic(note);
@@ -199,7 +206,7 @@ const SettingsProvider = ({ children }: { children: ReactNode }) => {
               key={label}
               className={`${tonality === label ? 'active' : ''}`}
               onClick={() => {
-              setTonality(TONALITY[t as keyof typeof TONALITY])
+                setTonality(TONALITY[t as keyof typeof TONALITY])
             }}>{label}</button>
           )
         })}

@@ -51,6 +51,10 @@ main {
   opacity: 0.5;
 }
 
+.chord.in-scale::before {
+  background: blue;
+}
+
 .scale-labels span {
   margin-right: 1em;
 }

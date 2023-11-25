@@ -3,7 +3,16 @@ type Note = typeof notes[number];
 
 type ScaleNotes = Note[];
 type ScaleLabels = string[];
-type Chord = Note[];
+
+type Scale = {
+  scaleNotes: Note[],
+  scaleLabels: string[]
+}
+
+type Chord = {
+  labels: ScaleLabels
+  notes: ScaleNotes
+}
 
 type Scale = {
   scaleNotes: ScaleNotes,

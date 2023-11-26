@@ -1,10 +1,15 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.tsx'
+import App from './App'
+import { SettingsProvider, NotesProvider } from './context'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <SettingsProvider>
+      <NotesProvider>
+        <App />
+      </NotesProvider>
+    </SettingsProvider>
   </React.StrictMode>,
 )

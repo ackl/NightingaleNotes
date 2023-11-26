@@ -2,7 +2,7 @@ export enum TONALITY {
   MAJOR = 'Major',
   MINOR_NATURAL = 'Minor Natural',
   MINOR_HARMONIC = 'Minor Harmonic',
-  MINOR_MELODIC = 'Minor Melodic',
+  MINOR_MELODIC = 'Minor Melodic (ascending/jazz)',
 }
 
 export const notes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const;
@@ -160,23 +160,14 @@ export function getMinorKeyLabel(note: Note) {
 
 export function getNoteLabel(tonic: Note, note: Note, tonality: TONALITY) {
   if (tonality === TONALITY.MINOR_MELODIC) {
-    // make C into B# if tonic is C#
-    if (tonic === 1 && note === 0) {
-      return sharpen(12 as Note);
-    }
-    // make C into C# if tonic is D
-    if (tonic === 2 && note === 1) {
-      return sharpen(1 as Note);
-    }
-
-    // make F into E# if tonic is F#
-    if (tonic === 6 && note === 5) {
-      return sharpen(5 as Note);
-    }
-
-    // make F into F# if tonic is G
-    if (tonic === 7 && note === 6) {
-      return sharpen(6 as Note);
+    // since default return is to flatten label, use sharpened enharmonic for
+    // 7th degree for some cases to maintain diatonic scale spelling. i.e:
+    // C into B# if tonic is C#
+    // Db into C# if tonic is D
+    // F into E# if tonic is F#
+    // Gb into F# if tonic is G
+    if ([1, 2, 6, 7].includes(tonic) && note === (tonic - 1)) {
+      return sharpen(note ? note : 12 as Note);
     }
 
     // make E into E# if tonic is G#

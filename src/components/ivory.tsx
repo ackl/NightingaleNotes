@@ -20,7 +20,7 @@ export function Ivory({
 
   const noteLabel = getNoteLabel(tonic, note, tonality);
 
-  let isNoteInScale = scale?.scaleNotes.includes(note);
+  let isNoteInScale = scale?.notes.includes(note);
   let isHighlight = true;
 
   if (chord) {
@@ -28,7 +28,7 @@ export function Ivory({
     if (isFirstOctave && (note < chord.notes[0])) isHighlight = false;
     if (isLastOctave && (note > chord.notes[0])) isHighlight = false;
   } else {
-    isHighlight = scale?.scaleNotes.includes(note) || false;
+    isHighlight = scale?.notes.includes(note) || false;
     if (isFirstOctave && (note < tonic)) isHighlight = false;
     if (isLastOctave && (note > tonic)) isHighlight = false;
   }

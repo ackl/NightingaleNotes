@@ -99,14 +99,14 @@ const tonalityUtilsMap = {
   },
 }
 
-export function buildDiatonicTriads(tonic: Note, tonality: TONALITY): Chord[] {
+export function buildDiatonicTriads(tonic: Note, tonality: TONALITY): Sequence[] {
   const scale = getScale(tonic, tonality);
   //const tonicLabel = tonality === TONALITY.MAJOR ?
     //majorKeyLabels[tonic][0] : minorKeyLabels[tonic][0];
 
   //const tonicLabelIdx = noteLabels.indexOf(tonicLabel);
 
-  return scale.scaleNotes.map((root, i) => {
+  return scale.notes.map((root, i) => {
     //const rootNoteLabel = noteLabels[(tonicLabelIdx + i) % 12]
     const chordType = tonalityUtilsMap['triads'][tonality][i]
     const triad = buildChord(root as Note, chordType)
@@ -303,8 +303,8 @@ export function getMajorScale(tonic: Note) {
   const scaleLabels = scaleNotes.map(n => getNoteLabel(tonic, n, TONALITY.MAJOR));
 
   return {
-    scaleNotes,
-    scaleLabels
+    notes: scaleNotes,
+    labels: scaleLabels
   }
 }
 
@@ -322,8 +322,8 @@ export function getMinorNaturalScale(tonic: Note) {
   const scaleLabels = scaleNotes.map(n => getNoteLabel(tonic, n, TONALITY.MINOR_NATURAL));
 
   return {
-    scaleNotes,
-    scaleLabels
+    notes: scaleNotes,
+    labels: scaleLabels
   }
 }
 
@@ -340,8 +340,8 @@ export function getMinorHarmonicScale(tonic: Note) {
   const scaleLabels = scaleNotes.map(n => getNoteLabel(tonic, n, TONALITY.MINOR_HARMONIC));
 
   return {
-    scaleNotes,
-    scaleLabels
+    notes: scaleNotes,
+    labels: scaleLabels
   }
 }
 
@@ -349,8 +349,6 @@ export function getMinorMelodicScaleNotes(tonic: Note): Note[] {
   // just lower the 3rd of the tonic major
   const scaleNotes = getMajorScaleNotes(tonic);
   scaleNotes[2] = (scaleNotes[2] + 11) % 12 as Note;
-
-  console.log("TONIC", tonic, scaleNotes, getMajorScaleNotes(tonic));
 
   return scaleNotes;
 }
@@ -361,12 +359,12 @@ export function getMinorMelodicScale(tonic: Note) {
   const scaleLabels = scaleNotes.map(n => getNoteLabel(tonic, n, TONALITY.MINOR_MELODIC));
 
   return {
-    scaleNotes,
-    scaleLabels
+    notes: scaleNotes,
+    labels: scaleLabels
   }
 }
 
-export function getScale(tonic: Note, tonality: TONALITY): Scale {
+export function getScale(tonic: Note, tonality: TONALITY): Sequence {
   return tonalityUtilsMap['scaleFunction'][tonality](tonic);
 }
 

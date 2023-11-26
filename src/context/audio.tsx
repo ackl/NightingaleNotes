@@ -4,16 +4,14 @@ import { useState, useEffect, createContext } from 'react'
 
 interface AudioContextState {
   audioContext: AudioContext | null;
-  playPianoNote: (n: number) => void;
-  getFrequency: (n: Note) => number;
   playSequence: (n: number[]) => void;
+  playTone: (n: number) => void;
 }
 
 const initialAudioContextState: AudioContextState = {
   audioContext: null,
-  playPianoNote: () => {},
-  getFrequency: () => 0,
-  playSequence: () => {}
+  playSequence: () => {},
+  playTone: () => {}
 }
 
 export const AudioReactContext = createContext<AudioContextState>(initialAudioContextState);
@@ -24,59 +22,15 @@ declare global {
   }
 }
 
-const twelveTETSemitoneRatio = 2 ** (1 / 12);
-const A = 440
-
 export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [init, setInit] = useState(false);
+  const [noteArrayBuffer, setNoteArrayBuffer] = useState<ArrayBuffer>();
+  const [pianoSample, setPianoSample] = useState<AudioBuffer>();
 
-  function playPianoNote(note: number) {
-    if (audioContext) {
-      var oscillator = audioContext.createOscillator();
-      var gainNode = audioContext.createGain();
-
-      oscillator.type = 'sine'; // You can change the type to 'sine', 'square', 'sawtooth', or 'triangle'
-      oscillator.frequency.value = note;
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      // Fade out the sound
-      gainNode.gain.setValueAtTime(1, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.5);
-
-      oscillator.start();
-      oscillator.stop(audioContext.currentTime + 0.5);
-    }
-  }
-
-  // Function to map note names to frequencies
-  function getFrequency(note: Note) {
-    const noteMap: Record<Note, number> = {
-      0: A / (twelveTETSemitoneRatio ** 9),
-      1: A / (twelveTETSemitoneRatio ** 8),
-      2: A / (twelveTETSemitoneRatio ** 7),
-      3: A / (twelveTETSemitoneRatio ** 6),
-      4: A / (twelveTETSemitoneRatio ** 5),
-      5: A / (twelveTETSemitoneRatio ** 4),
-      6: A / (twelveTETSemitoneRatio ** 3),
-      7: A / (twelveTETSemitoneRatio ** 2),
-      8: A / twelveTETSemitoneRatio,
-      9: A,
-      10: A * twelveTETSemitoneRatio,
-      11: A * (twelveTETSemitoneRatio ** 2),
-    };
-
-    return noteMap[note] || 0;
-  }
-
-  //function delayedFunction(freqs: number[], n: number) {
-    //playPianoNote(freqs[n]);
-  //}
-
-  function playSequence(freqs: number[]) {
-    const delay = 200; // Delay in milliseconds
-    let iterations = freqs.length; // Number of iterations
+  function playSequence(notes: number[]) {
+    const delay = 333; // Delay in milliseconds
+    let iterations = notes.length; // Number of iterations
     let startTime: number | null;
 
     function runIteration(timestamp: number) {
@@ -90,8 +44,8 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
         requestAnimationFrame(runIteration);
       } else {
         startTime = null;
-        //delayedFunction(freqs, freqs.length - iterations);
-        playPianoNote(freqs[ freqs.length - iterations ]);
+        // get relative note since sample is in A 440
+        playTone(notes[ notes.length - iterations ] - 9);
         iterations--;
 
         if (iterations > 0) {
@@ -101,6 +55,17 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     }
 
     requestAnimationFrame(runIteration);
+  }
+
+  function playTone(noteValue: number) {
+    if (audioContext && pianoSample) {
+      const source = audioContext.createBufferSource();
+      source.buffer = pianoSample;
+      source.detune.value = noteValue * 100;
+
+      source.connect(audioContext.destination);
+      source.start(0);
+    }
   }
 
   useEffect(() => {
@@ -125,12 +90,27 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [init]);
 
+  useEffect(() => {
+    fetch('/a3.mp3')
+      .then((response) => response.arrayBuffer())
+      .then((buffer) => setNoteArrayBuffer(buffer));
+  }, []);
+
+  useEffect(() => {
+    if (audioContext && noteArrayBuffer) {
+      console.log("YES");
+      audioContext.decodeAudioData(noteArrayBuffer)
+        .then((sample) => {
+          setPianoSample(sample);
+        });
+    }
+  }, [noteArrayBuffer, audioContext]);
+
   return (
     <AudioReactContext.Provider value={{
       audioContext,
-      playPianoNote,
-      getFrequency,
-      playSequence
+      playSequence,
+      playTone
     }}>
       {children}
     </AudioReactContext.Provider>

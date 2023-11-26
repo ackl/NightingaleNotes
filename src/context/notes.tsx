@@ -12,10 +12,10 @@ import {
 interface NotesState {
   diatonicChordRoot?: Note;
   setDiatonicChordRoot: (arg?: Note) => void;
-  scale?: Scale;
-  setScale: (arg: Scale) => void,
-  chord?: Chord;
-  setChord: (arg?: Chord) => void;
+  scale?: Sequence;
+  setScale: (arg: Sequence) => void,
+  chord?: Sequence;
+  setChord: (arg?: Sequence) => void;
 }
 
 const initialNotesState: NotesState = {
@@ -27,10 +27,10 @@ const initialNotesState: NotesState = {
 export const NotesContext = createContext<NotesState>(initialNotesState);
 
 export const NotesProvider = ({ children }: { children: ReactNode }) => {
-  const [scale, setScale] = useState<Scale | undefined>();
-  const [diatonicChords, setDiatonicChords] = useState<Chord[] | undefined>();
+  const [scale, setScale] = useState<Sequence | undefined>();
+  const [diatonicChords, setDiatonicChords] = useState<Sequence[] | undefined>();
   const [diatonicChordRoot, setDiatonicChordRoot] = useState<Note | undefined>();
-  const [chord, setChord] = useState<Chord | undefined>();
+  const [chord, setChord] = useState<Sequence | undefined>();
 
   const {
     tonality,

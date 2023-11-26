@@ -4,17 +4,7 @@ type Note = typeof notes[number];
 type ScaleNotes = Note[];
 type ScaleLabels = string[];
 
-type Scale = {
-  scaleNotes: Note[],
-  scaleLabels: string[]
-}
-
-type Chord = {
+type Sequence = {
+  notes: ScaleNotes,
   labels: ScaleLabels
-  notes: ScaleNotes
-}
-
-type Scale = {
-  scaleNotes: ScaleNotes,
-  scaleLabels: ScaleLabels
 }

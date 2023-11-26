@@ -1,4 +1,4 @@
-import { useContext, useEffect } from 'react'
+import { useContext } from 'react'
 import {
   TONALITY,
   notes,
@@ -14,7 +14,7 @@ import { Keyboard } from './components/keyboard'
 function App() {
   const {tonality, tonic, setTonic} = useContext(SettingsContext);
   const {scale, chord} = useContext(NotesContext);
-  const {getFrequency, playPianoNote, audioContext, playSequence} = useContext(AudioReactContext);
+  const {audioContext, playSequence} = useContext(AudioReactContext);
 
   return (
       <main>
@@ -50,28 +50,26 @@ function App() {
                   view: window,
                 });
 
-                console.log("fald", audioContext);
-                document.querySelector('.play')?.dispatchEvent(clickEvent);
+                setTimeout(() => {
+                  document.querySelector('.play')?.dispatchEvent(clickEvent);
+                }, 100);
               }, 1);
             } else {
-              if (chord) {
-                for (let i = 0; i < chord.notes.length; i++) {
-                  setTimeout(() => {
-                    playPianoNote(getFrequency(chord.notes[i]));
-                  }, i * 300)
-                }
-              } else if (scale) {
-                const max = Math.max(...scale.scaleNotes);
-                const maxIdx = scale.scaleNotes.indexOf(max as Note);
-                const lower = scale.scaleNotes.slice(0, maxIdx + 1);
-                const upper = scale.scaleNotes.slice(maxIdx + 1);
+              const sequence = chord ? chord : scale;
+              if (sequence) {
+                const max = Math.max(...sequence.notes);
+                const maxIdx = sequence.notes.indexOf(max as Note);
 
-                const freqs: number[] = lower.map(x => getFrequency(x));
-                freqs.push(...upper.map(x => {return getFrequency(x) * 2}));
-                //add octave
-                freqs.push(freqs[0] * 2);
+                // rearrange so that whole array of notes is only
+                // ascending numbers without the modulo 12
+                // this is so that the audioContext sample can use this value
+                // to determine how to detune the A440 sample
+                const lower = sequence.notes.slice(0, maxIdx + 1);
+                const upper = sequence.notes.slice(maxIdx + 1).map(x => x + 12);
 
-                playSequence(freqs);
+                // since we build notes of a heptatonic add back the octave
+                const sequenceNotes = [...lower, ...upper, lower[0] + 12];
+                playSequence(sequenceNotes);
               }
             }
           }}

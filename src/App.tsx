@@ -25,8 +25,8 @@ function Ivory({
   isLastOctave: boolean,
 }) {
   const isWhiteKey = whiteKeys.includes(note);
-  const {showIvoryLabels, onlyInKey, tonality} = useContext(SettingsContext);
-  const {tonic, setTonic, scale, chord} = useContext(NotesContext);
+  const {tonic, setTonic, showIvoryLabels, onlyInKey, tonality} = useContext(SettingsContext);
+  const {scale, chord} = useContext(NotesContext);
 
   const noteLabel = getNoteLabel(tonic, note, tonality);
 
@@ -110,8 +110,8 @@ function Keyboard() {
 }
 
 function KeySignature() {
-  const { tonality } = useContext(SettingsContext);
-  const { tonic, chord } = useContext(NotesContext);
+  const { tonic, tonality } = useContext(SettingsContext);
+  const { chord } = useContext(NotesContext);
 
   useEffect(() => {
     const key = tonality === TONALITY.MAJOR ?
@@ -135,14 +135,18 @@ interface Settings {
   octaves: number;
   tonality: TONALITY
   setTonality: (arg: TONALITY) => void;
+  tonic: Note;
+  setTonic: (arg: Note) => void;
 }
 
-const initialSettingsState = {
+const initialSettingsState: Settings = {
   showIvoryLabels: false,
   onlyInKey: true,
   octaves: 2,
   tonality: TONALITY['MAJOR'],
   setTonality: () => {},
+  tonic: 0,
+  setTonic: () => {},
 }
 
 const SettingsContext = createContext<Settings>(initialSettingsState);
@@ -152,6 +156,7 @@ const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [onlyInKey, setOnlyInKey] = useState(initialSettingsState.onlyInKey);
   const [octaves, setOctaves] = useState(initialSettingsState.octaves);
   const [tonality, setTonality] = useState<TONALITY>(initialSettingsState.tonality);
+  const [tonic, setTonic] = useState<Note>(0);
 
   function ShowHideButton() {
     return <button
@@ -180,7 +185,6 @@ const SettingsProvider = ({ children }: { children: ReactNode }) => {
       <button onClick={() => setOctaves((prev) => prev < 3 ? 2 : prev - 1)}>-</button>
     </div>
   }
-  console.log(tonality);
 
   return (
     <SettingsContext.Provider value={{
@@ -188,7 +192,9 @@ const SettingsProvider = ({ children }: { children: ReactNode }) => {
         onlyInKey,
         octaves,
         tonality,
-        setTonality
+        setTonality,
+        tonic,
+        setTonic,
     }}>
       {children}
       <div className='settings-controls'>
@@ -210,34 +216,48 @@ const SettingsProvider = ({ children }: { children: ReactNode }) => {
             }}>{label}</button>
           )
         })}
+        <button
+          onClick={() => {
+            if (tonality === TONALITY.MAJOR) {
+              setTonic((tonic + 9) % 12 as Note);
+              setTonality(TONALITY.MINOR_NATURAL);
+            } else {
+              setTonality(TONALITY.MAJOR);
+              setTonic((tonic + 3) % 12 as Note);
+            }
+          }}
+        >go to relative {tonality === TONALITY.MAJOR ? 'minor' : 'major'}</button>
       </div>
     </SettingsContext.Provider>
   );
 };
 
 interface NotesState {
-  tonic: Note;
-  setTonic: (arg: Note) => void;
   diatonicChordRoot?: Note;
   setDiatonicChordRoot: (arg?: Note) => void;
   scale?: Scale;
+  setScale: (arg: Scale) => void,
   chord?: Chord;
+  setChord: (arg?: Chord) => void;
 }
 
 const initialNotesState: NotesState = {
-  tonic: 0,
-  setTonic: () => {},
   setDiatonicChordRoot: () => {},
+  setScale: () => {},
+  setChord: () => {},
 }
 const NotesContext = createContext<NotesState>(initialNotesState);
 
 const NotesProvider = ({ children }: { children: ReactNode }) => {
-  const {tonality} = useContext(SettingsContext);
-  const [tonic, setTonic] = useState<Note>(0);
   const [scale, setScale] = useState<Scale | undefined>();
   const [diatonicChords, setDiatonicChords] = useState<Chord[] | undefined>();
   const [diatonicChordRoot, setDiatonicChordRoot] = useState<Note | undefined>();
   const [chord, setChord] = useState<Chord | undefined>();
+
+  const {
+    tonality,
+    tonic,
+  } = useContext(SettingsContext);
 
   useEffect(() => {
     setScale(getScale(tonic, tonality));
@@ -253,7 +273,14 @@ const NotesProvider = ({ children }: { children: ReactNode }) => {
   }, [diatonicChordRoot, diatonicChords]);
 
   return (
-    <NotesContext.Provider value={{tonic, setTonic, scale, chord, diatonicChordRoot, setDiatonicChordRoot}}>
+    <NotesContext.Provider value={{
+      scale,
+      setScale,
+      chord,
+      setChord,
+      diatonicChordRoot,
+      setDiatonicChordRoot
+    }}>
       {children}
       <div className='diatonic-chords'>
         <h3>diatonic triads</h3>
@@ -279,8 +306,7 @@ const NotesProvider = ({ children }: { children: ReactNode }) => {
 
 
 function App() {
-  const {tonic, setTonic} = useContext(NotesContext);
-  const {tonality} = useContext(SettingsContext);
+  const {tonality, tonic, setTonic} = useContext(SettingsContext);
 
   return (
       <main>

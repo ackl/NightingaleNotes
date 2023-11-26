@@ -1,4 +1,4 @@
-import { useContext } from 'react'
+import { useContext, useEffect } from 'react'
 import {
   TONALITY,
   notes,
@@ -6,13 +6,15 @@ import {
   getMinorKeyLabel,
 } from './lib';
 import './App.css'
-import { SettingsContext } from './context'
+import { NotesContext, SettingsContext, AudioReactContext } from './context'
 import { KeySignature } from './components/keySignature'
 import { Keyboard } from './components/keyboard'
 
 
 function App() {
   const {tonality, tonic, setTonic} = useContext(SettingsContext);
+  const {scale, chord} = useContext(NotesContext);
+  const {getFrequency, playPianoNote, audioContext, playSequence} = useContext(AudioReactContext);
 
   return (
       <main>
@@ -36,6 +38,44 @@ function App() {
         <KeySignature />
 
         <Keyboard />
+
+        <button
+          className='play'
+          onClick={() => {
+            if (!audioContext) {
+              setTimeout(() => {
+                const clickEvent = new MouseEvent('click', {
+                  bubbles: true,
+                  cancelable: true,
+                  view: window,
+                });
+
+                console.log("fald", audioContext);
+                document.querySelector('.play')?.dispatchEvent(clickEvent);
+              }, 1);
+            } else {
+              if (chord) {
+                for (let i = 0; i < chord.notes.length; i++) {
+                  setTimeout(() => {
+                    playPianoNote(getFrequency(chord.notes[i]));
+                  }, i * 300)
+                }
+              } else if (scale) {
+                const max = Math.max(...scale.scaleNotes);
+                const maxIdx = scale.scaleNotes.indexOf(max as Note);
+                const lower = scale.scaleNotes.slice(0, maxIdx + 1);
+                const upper = scale.scaleNotes.slice(maxIdx + 1);
+
+                const freqs: number[] = lower.map(x => getFrequency(x));
+                freqs.push(...upper.map(x => {return getFrequency(x) * 2}));
+                //add octave
+                freqs.push(freqs[0] * 2);
+
+                playSequence(freqs);
+              }
+            }
+          }}
+        >play me</button>
       </main>
     )
 }

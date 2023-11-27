@@ -14,7 +14,7 @@ import { Keyboard } from './components/keyboard'
 function App() {
   const {tonality, tonic, setTonic} = useContext(SettingsContext);
   const {scale, chord} = useContext(NotesContext);
-  const {audioContext, playSequence} = useContext(AudioReactContext);
+  const {audioContext, playSequence, playChord} = useContext(AudioReactContext);
 
   return (
       <main>
@@ -69,7 +69,7 @@ function App() {
 
                 // since we build notes of a heptatonic add back the octave
                 const sequenceNotes = [...lower, ...upper, lower[0] + 12];
-                playSequence(sequenceNotes);
+                chord ? playChord(sequenceNotes) : playSequence(sequenceNotes);
               }
             }
           }}

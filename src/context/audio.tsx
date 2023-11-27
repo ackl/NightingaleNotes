@@ -5,12 +5,14 @@ import { useState, useEffect, createContext } from 'react'
 interface AudioContextState {
   audioContext: AudioContext | null;
   playSequence: (n: number[]) => void;
+  playChord: (n: number[]) => void;
   playTone: (n: number) => void;
 }
 
 const initialAudioContextState: AudioContextState = {
   audioContext: null,
   playSequence: () => {},
+  playChord: () => {},
   playTone: () => {}
 }
 
@@ -26,7 +28,7 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [init, setInit] = useState(false);
   const [noteArrayBuffer, setNoteArrayBuffer] = useState<ArrayBuffer>();
-  const [pianoSample, setPianoSample] = useState<AudioBuffer>();
+  const [pianoSample, setPianoSample] = useState<AudioBuffer | null>(null);
 
   function playSequence(notes: number[]) {
     const delay = 333; // Delay in milliseconds
@@ -57,13 +59,22 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     requestAnimationFrame(runIteration);
   }
 
+  function playChord(notes: number[]) {
+    notes.map(n => {
+      playTone(n - 9)
+    });
+  }
+
   function playTone(noteValue: number) {
     if (audioContext && pianoSample) {
       const source = audioContext.createBufferSource();
+      const gainNode = audioContext.createGain();
+      gainNode.gain.value = 0.3;
       source.buffer = pianoSample;
       source.detune.value = noteValue * 100;
 
-      source.connect(audioContext.destination);
+      source.connect(gainNode);
+      gainNode.connect(audioContext.destination);
       source.start(0);
     }
   }
@@ -98,7 +109,6 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     if (audioContext && noteArrayBuffer) {
-      console.log("YES");
       audioContext.decodeAudioData(noteArrayBuffer)
         .then((sample) => {
           setPianoSample(sample);
@@ -110,6 +120,7 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     <AudioReactContext.Provider value={{
       audioContext,
       playSequence,
+      playChord,
       playTone
     }}>
       {children}

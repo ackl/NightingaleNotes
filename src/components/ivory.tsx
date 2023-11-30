@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import { NotesContext, SettingsContext } from '../context'
+import { NotesContext, SettingsContext, AudioReactContext } from '../context'
 import {
   whiteKeys,
   getNoteLabel
@@ -7,18 +7,19 @@ import {
 
 export function Ivory({
   note,
-  isFirstOctave,
-  isLastOctave,
+  octave
 }: {
   note: Note,
-  isFirstOctave: boolean,
-  isLastOctave: boolean,
+  octave: number,
 }) {
   const isWhiteKey = whiteKeys.includes(note);
-  const {tonic, setTonic, showIvoryLabels, onlyInKey, tonality} = useContext(SettingsContext);
+  const {tonic, setTonic, showIvoryLabels, onlyInKey, tonality, octaves} = useContext(SettingsContext);
   const {scale, chord} = useContext(NotesContext);
+  const {playTone} = useContext(AudioReactContext);
 
   const noteLabel = getNoteLabel(tonic, note, tonality);
+  const isFirstOctave = octave === 0;
+  const isLastOctave = octave === (octaves - 1);
 
   let isNoteInScale = scale?.notes.includes(note);
   let isHighlight = true;
@@ -48,6 +49,7 @@ export function Ivory({
       }
       onClick={() => {
         setTonic(note);
+        playTone(note + (octave * 12));
       }}
     >
       <span className={`ivory-label ${showIvoryLabels && 'show'}`}>

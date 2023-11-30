@@ -10,8 +10,7 @@ export function Keyboard() {
     els.push(
       <Octave
         key={i}
-        isFirstOctave={i === 0}
-        isLastOctave={i === (octaves - 1)}
+        octave={i}
       />
     )
   }

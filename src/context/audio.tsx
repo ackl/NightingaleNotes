@@ -37,7 +37,7 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
   }
 
   function playChord(notes: number[]) {
-    notes.forEach(playTone);
+    notes.forEach(n => playTone(n, 0));
   }
 
   function playTone(noteValue: number, when = 0) {
@@ -46,12 +46,13 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
       const gainNode = audioContext.createGain();
       gainNode.gain.value = 0.3;
       source.buffer = pianoSample;
-      // noteValue is based on C = 0, need to subtract 9 semitones as sample is A440
-      source.detune.value = (noteValue - 9) * 100;
+      // we're saying that octave 0 is octave below middle C
+      // noteValue is based on C = 0, need to subtract 18 semitones as sample is A440
+      source.detune.value = (noteValue - 18) * 100;
 
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      source.start(when);
+      source.start(audioContext.currentTime + when);
     }
   }
 

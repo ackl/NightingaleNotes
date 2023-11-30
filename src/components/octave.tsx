@@ -4,8 +4,7 @@ import {
 } from '../lib';
 
 export function Octave(props: {
-  isFirstOctave: boolean,
-  isLastOctave: boolean
+  octave: number,
 }) {
   return (
     <>

@@ -121,6 +121,7 @@ main {
   position: absolute;
   top: 1em;
   left: 1em;
+  max-width: 200px;
 }
 
 .key-selector {

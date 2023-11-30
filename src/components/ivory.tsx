@@ -48,7 +48,7 @@ export function Ivory({
         `
       }
       onClick={() => {
-        setTonic(note);
+        //setTonic(note);
         playTone(note + (octave * 12));
       }}
     >

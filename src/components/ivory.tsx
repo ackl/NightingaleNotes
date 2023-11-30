@@ -13,7 +13,7 @@ export function Ivory({
   octave: number,
 }) {
   const isWhiteKey = whiteKeys.includes(note);
-  const {tonic, setTonic, showIvoryLabels, onlyInKey, tonality, octaves} = useContext(SettingsContext);
+  const {tonic, showIvoryLabels, onlyInKey, tonality, octaves} = useContext(SettingsContext);
   const {scale, chord} = useContext(NotesContext);
   const {playTone} = useContext(AudioReactContext);
 

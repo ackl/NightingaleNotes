@@ -55,7 +55,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
 
   function OctavesButtons() {
     return <div>
-      <label>number of octaves: {octaves}</label>
+      <label>number of octaves: {octaves}  </label>
       <button onClick={() => setOctaves((prev) => prev > 4 ? 5 : prev + 1)}>+</button>
       <button onClick={() => setOctaves((prev) => prev < 3 ? 2 : prev - 1)}>-</button>
     </div>

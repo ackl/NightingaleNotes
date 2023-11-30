@@ -17,9 +17,46 @@ function App() {
   const {audioContext, playSequence, playChord} = useContext(AudioReactContext);
 
   return (
-      <main>
+      <>
+        <section className='play-button'>
+          <button
+            className='play'
+            onClick={() => {
+              if (!audioContext) {
+                setTimeout(() => {
+                  const clickEvent = new MouseEvent('click', {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                  });
+
+                  setTimeout(() => {
+                    document.querySelector('.play')?.dispatchEvent(clickEvent);
+                  }, 100);
+                }, 1);
+              } else {
+                const sequence = chord ? chord : scale;
+                if (sequence) {
+                  const max = Math.max(...sequence.notes);
+                  const maxIdx = sequence.notes.indexOf(max as Note);
+
+                  // rearrange so that whole array of notes is only
+                  // ascending numbers without the modulo 12
+                  // this is so that the audioContext sample can use this value
+                  // to determine how to detune the A440 sample
+                  const lower = sequence.notes.slice(0, maxIdx + 1);
+                  const upper = sequence.notes.slice(maxIdx + 1).map(x => x + 12);
+
+                  // since we build notes of a heptatonic add back the octave
+                  const sequenceNotes = [...lower, ...upper, lower[0] + 12];
+                  chord ? playChord(sequenceNotes) : playSequence(sequenceNotes);
+                }
+              }
+            }}
+          >►</button>
+        </section>
         <section className="key-selector">
-          <label htmlFor="key">Select a key:</label>
+          <label htmlFor="key">Key: </label>
           <select
             id="key"
             onChange={(ev) => {
@@ -33,48 +70,12 @@ function App() {
               </option>
             ))}
           </select>
+          <KeySignature />
         </section>
-
-        <KeySignature />
-
-        <Keyboard />
-
-        <button
-          className='play'
-          onClick={() => {
-            if (!audioContext) {
-              setTimeout(() => {
-                const clickEvent = new MouseEvent('click', {
-                  bubbles: true,
-                  cancelable: true,
-                  view: window,
-                });
-
-                setTimeout(() => {
-                  document.querySelector('.play')?.dispatchEvent(clickEvent);
-                }, 100);
-              }, 1);
-            } else {
-              const sequence = chord ? chord : scale;
-              if (sequence) {
-                const max = Math.max(...sequence.notes);
-                const maxIdx = sequence.notes.indexOf(max as Note);
-
-                // rearrange so that whole array of notes is only
-                // ascending numbers without the modulo 12
-                // this is so that the audioContext sample can use this value
-                // to determine how to detune the A440 sample
-                const lower = sequence.notes.slice(0, maxIdx + 1);
-                const upper = sequence.notes.slice(maxIdx + 1).map(x => x + 12);
-
-                // since we build notes of a heptatonic add back the octave
-                const sequenceNotes = [...lower, ...upper, lower[0] + 12];
-                chord ? playChord(sequenceNotes) : playSequence(sequenceNotes);
-              }
-            }
-          }}
-        >play me</button>
-      </main>
+        <main>
+          <Keyboard />
+        </main>
+      </>
     )
 }
 

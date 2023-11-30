@@ -7,6 +7,11 @@ main {
   width: 100%;
 }
 
+.keyboard-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
 .keyboard {
   display: flex;
 }
@@ -121,6 +126,12 @@ main {
 .key-selector {
   position: absolute;
   top: 1em;
+  left: 1em;
+}
+
+.play-button {
+  position: absolute;
+  top: 1em;
   right: 1em;
 }
 
@@ -134,4 +145,8 @@ main {
 
 button {
   margin-right: 1em;
+}
+
+button.play {
+  border-color: #85d785;
 }

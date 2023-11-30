@@ -17,11 +17,11 @@ export function Keyboard() {
   }
 
   return (
-    <>
-    <section className='keyboard'>
-      {els.map(el => el)}
-    </section>
-    </>
+    <div className='keyboard-wrapper'>
+      <section className='keyboard'>
+        {els.map(el => el)}
+      </section>
+    </div>
   )
 }
 

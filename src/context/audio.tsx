@@ -31,51 +31,27 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
   const [pianoSample, setPianoSample] = useState<AudioBuffer | null>(null);
 
   function playSequence(notes: number[]) {
-    const delay = 333; // Delay in milliseconds
-    let iterations = notes.length; // Number of iterations
-    let startTime: number | null;
-
-    function runIteration(timestamp: number) {
-      if (!startTime) {
-        startTime = timestamp;
-      }
-
-      const elapsedTime = timestamp - startTime;
-
-      if (elapsedTime < delay && iterations > 0) {
-        requestAnimationFrame(runIteration);
-      } else {
-        startTime = null;
-        // get relative note since sample is in A 440
-        playTone(notes[ notes.length - iterations ] - 9);
-        iterations--;
-
-        if (iterations > 0) {
-          requestAnimationFrame(runIteration);
-        }
-      }
-    }
-
-    requestAnimationFrame(runIteration);
-  }
-
-  function playChord(notes: number[]) {
-    notes.map(n => {
-      playTone(n - 9)
+    notes.forEach((n, i) => {
+      playTone(n, i / 4)
     });
   }
 
-  function playTone(noteValue: number) {
+  function playChord(notes: number[]) {
+    notes.forEach(playTone);
+  }
+
+  function playTone(noteValue: number, when = 0) {
     if (audioContext && pianoSample) {
       const source = audioContext.createBufferSource();
       const gainNode = audioContext.createGain();
       gainNode.gain.value = 0.3;
       source.buffer = pianoSample;
-      source.detune.value = noteValue * 100;
+      // noteValue is based on C = 0, need to subtract 9 semitones as sample is A440
+      source.detune.value = (noteValue - 9) * 100;
 
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      source.start(0);
+      source.start(when);
     }
   }
 

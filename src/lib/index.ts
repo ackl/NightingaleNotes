@@ -7,6 +7,12 @@ export enum TONALITY {
 
 export const notes = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] as const;
 
+// get 0 - 59 (full range of our keyboard)
+// new Array(5).fill(null).flatMap((x, i) => notes.map(n => n + (i*12)))
+// then make map of note to filename per major third
+// then create sampler (rest of the fucking owl)
+
+
 export const noteLabels = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
 
 // Give flats to all but C and F

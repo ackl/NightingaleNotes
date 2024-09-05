@@ -1,27 +1,29 @@
 import type { ReactNode } from 'react'
 import { useState, useEffect, createContext } from 'react'
 
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext
+  }
+}
+
 interface AudioContextState {
   audioContext: AudioContext | null;
   playSequence: (n: number[]) => void;
   playChord: (n: number[]) => void;
   playTone: (n: number) => void;
+  playNotes: (s: Sequence) => void;
 }
 
 const initialAudioContextState: AudioContextState = {
   audioContext: null,
   playSequence: () => {},
   playChord: () => {},
-  playTone: () => {}
+  playTone: () => {},
+  playNotes: () => {}
 }
 
 export const AudioReactContext = createContext<AudioContextState>(initialAudioContextState);
-
-declare global {
-  interface Window {
-    webkitAudioContext?: typeof AudioContext
-  }
-}
 
 // have samples per minor third
 // 0  3   6   9
@@ -120,19 +122,51 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     if (audioContext && bufferLoader?.audioBuffers) {
       const source = audioContext.createBufferSource();
       const gainNode = audioContext.createGain();
-      gainNode.gain.value = 0.2;
+      gainNode.gain.value = 1;
 
       const sampleInfo = getSampleForNote(noteValue);
       source.buffer = bufferLoader.audioBuffers[sampleInfo.sample]
 
+      source.detune.value = (sampleInfo.detune) * 100;
       // we're saying that octave 0 is octave below middle C
       // noteValue is based on C = 0, need to subtract 18 semitones as sample is A440
-      source.detune.value = (sampleInfo.detune) * 100;
       //source.detune.value = (noteValue - 18) * 100;
 
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);
       source.start(audioContext.currentTime + when);
+    }
+  }
+
+  function playNotes(sequence: Sequence) {
+    if (!audioContext) {
+      setTimeout(() => {
+        const clickEvent = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+        });
+
+        setTimeout(() => {
+          document.querySelector('.play')?.dispatchEvent(clickEvent);
+        }, 100);
+      }, 1);
+    } else {
+      if (sequence) {
+        const max = Math.max(...sequence.notes);
+        const maxIdx = sequence.notes.indexOf(max as Note);
+
+        // rearrange so that whole array of notes is only
+        // ascending numbers without the modulo 12
+        // this is so that the audioContext sample can use this value
+        // to determine how to detune the A440 sample
+        const lower = sequence.notes.slice(0, maxIdx + 1);
+        const upper = sequence.notes.slice(maxIdx + 1).map(x => x + 12);
+
+        // since we build notes of a heptatonic add back the octave
+        const sequenceNotes = [...lower, ...upper, lower[0] + 12];
+        sequenceNotes.length > 6 ? playSequence(sequenceNotes) : playChord(sequenceNotes)
+      }
     }
   }
 
@@ -151,10 +185,12 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
 
     if (!init) {
       document.addEventListener('click', createAudioContext);
+      document.addEventListener('touchend', createAudioContext);
     }
 
     return () => {
       document.removeEventListener('click', createAudioContext);
+      document.removeEventListener('touchend', createAudioContext);
     };
   }, [init]);
 
@@ -183,7 +219,8 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
       audioContext,
       playSequence,
       playChord,
-      playTone
+      playTone,
+      playNotes
     }}>
       {children}
     </AudioReactContext.Provider>

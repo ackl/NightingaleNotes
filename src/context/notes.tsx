@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useState, useEffect, useContext, createContext } from 'react'
 import { SettingsContext } from './settings'
+import { AudioReactContext } from './audio'
 import {
   getScale,
   buildDiatonicTriads,

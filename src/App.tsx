@@ -4,31 +4,17 @@ import {
   notes,
   getMajorKeyLabel,
   getMinorKeyLabel,
+  throttle
 } from './lib';
 import './App.css'
 import { NotesContext, SettingsContext, AudioReactContext } from './context'
 import { KeySignature } from './components/keySignature'
 import { Keyboard } from './components/keyboard'
 
-function throttle(mainFunction: (...args: any[]) => any, delay: number) {
-  let timerFlag: number | null = null; // Variable to keep track of the timer
-
-  // Returning a throttled version 
-  return (...args: any[]) => {
-    if (timerFlag === null) { // If there is no timer currently running
-      mainFunction(...args); // Execute the main function 
-      timerFlag = setTimeout(() => { // Set a timer to clear the timerFlag after the specified delay
-        timerFlag = null; // Clear the timerFlag to allow the main function to be executed again
-      }, delay);
-    }
-  };
-}
-
-
 function App() {
   const {tonality, tonic, setTonic, octaves} = useContext(SettingsContext);
   const {scale, chord} = useContext(NotesContext);
-  const {audioContext, playSequence, playChord} = useContext(AudioReactContext);
+  const {audioContext, playSequence, playChord, playNotes} = useContext(AudioReactContext);
   const $mainRef = useRef<HTMLElement>(null);
 
   function keyboardOverflowHandler() {
@@ -50,43 +36,13 @@ function App() {
     keyboardOverflowHandler();
   }, [octaves])
 
+
   return (
       <>
         <section className='play-button'>
           <button
             className='play'
-            onClick={() => {
-              if (!audioContext) {
-                setTimeout(() => {
-                  const clickEvent = new MouseEvent('click', {
-                    bubbles: true,
-                    cancelable: true,
-                    view: window,
-                  });
-
-                  setTimeout(() => {
-                    document.querySelector('.play')?.dispatchEvent(clickEvent);
-                  }, 100);
-                }, 1);
-              } else {
-                const sequence = chord ? chord : scale;
-                if (sequence) {
-                  const max = Math.max(...sequence.notes);
-                  const maxIdx = sequence.notes.indexOf(max as Note);
-
-                  // rearrange so that whole array of notes is only
-                  // ascending numbers without the modulo 12
-                  // this is so that the audioContext sample can use this value
-                  // to determine how to detune the A440 sample
-                  const lower = sequence.notes.slice(0, maxIdx + 1);
-                  const upper = sequence.notes.slice(maxIdx + 1).map(x => x + 12);
-
-                  // since we build notes of a heptatonic add back the octave
-                  const sequenceNotes = [...lower, ...upper, lower[0] + 12];
-                  chord ? playChord(sequenceNotes) : playSequence(sequenceNotes);
-                }
-              }
-            }}
+            onClick={() => {playNotes((chord || scale) as Sequence)}}
           >►</button>
         </section>
         <section className="key-selector">

@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 import { useState, useEffect, createContext } from 'react'
-import { notes } from '../lib';
 
 interface AudioContextState {
   audioContext: AudioContext | null;

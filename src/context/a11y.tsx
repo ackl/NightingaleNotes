@@ -75,6 +75,7 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
       switch (ev.code) {
         case "Space":
           playNotes((chord || scale) as Sequence);
+          ev.preventDefault();
           break;
         case "KeyJ":
         case "ArrowUp":

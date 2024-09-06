@@ -17,7 +17,7 @@ export function Keyboard() {
 
   return (
     <div className='keyboard-wrapper'>
-      <section className='keyboard'>
+      <section className='keyboard perspective-shift'>
         {els.map(el => el)}
       </section>
     </div>

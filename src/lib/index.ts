@@ -300,8 +300,19 @@ export function doubleSharp(note: Note) {
   return `${noteLabels[idx]}${accidental['DOUBLE_SHARP']}`
 }
 
+export function generateScale(tonic: Note, scaleType: TONALITY, getScaleNotes: (tonic: Note) => number[]) {
+  const scaleNotes = getScaleNotes(tonic);
+  const scaleLabels = scaleNotes.map(n => getNoteLabel(tonic, n as Note, scaleType));
+
+  return {
+    notes: scaleNotes,
+    labels: scaleLabels
+  }
+}
+
 export function getMajorScaleNotes(tonic: Note) {
   return whiteKeys.map(interval => getNoteFromInterval(tonic, interval))
+
 }
 
 export function getMajorScale(tonic: Note) {

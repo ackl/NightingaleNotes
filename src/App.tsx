@@ -10,6 +10,7 @@ import './App.css'
 import { NotesContext, SettingsContext, AudioReactContext } from './context'
 import { KeySignature } from './components/keySignature'
 import { Keyboard } from './components/keyboard'
+import { TutModal } from './components/tutModal'
 
 function App() {
   const {tonality, tonic, setTonic, octaves} = useContext(SettingsContext);
@@ -39,6 +40,14 @@ function App() {
 
   return (
       <>
+        <div className="video-wrapper">
+          <video playsInline autoPlay muted loop>
+            <source src="bg.webm" type="video/webm" />
+            <source src="bg.mp4" type="video/mp4" />
+          </video>
+        <div className="shadow"></div>
+        </div>
+        <TutModal />
         <section className='play-button'>
           <button
             className='play'
@@ -65,8 +74,8 @@ function App() {
         <main ref={$mainRef}>
           <Keyboard />
         </main>
-      </>
-    )
+    </>
+  )
 }
 
 export default App;

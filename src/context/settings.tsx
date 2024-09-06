@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useState, createContext, useEffect } from 'react'
+import { useState, createContext } from 'react'
 import { TONALITY, } from '../lib';
 
 interface Settings {

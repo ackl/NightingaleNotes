@@ -104,7 +104,7 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
           handleTriad(ev);
           break;
         case "KeyM":
-          goToRelative(ev);
+          goToRelative();
           break;
       }
     }

@@ -14,7 +14,7 @@ import { Keyboard } from './components/keyboard'
 function App() {
   const {tonality, tonic, setTonic, octaves} = useContext(SettingsContext);
   const {scale, chord} = useContext(NotesContext);
-  const {audioContext, playSequence, playChord, playNotes} = useContext(AudioReactContext);
+  const {playNotes} = useContext(AudioReactContext);
   const $mainRef = useRef<HTMLElement>(null);
 
   function keyboardOverflowHandler() {

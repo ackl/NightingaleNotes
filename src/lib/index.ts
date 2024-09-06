@@ -416,6 +416,7 @@ export function leadingDebounce(func: Function, delay: number) {
     timeout = setTimeout(() => {
       timeout = null;
     }, delay);
+    // @ts-ignore
     if (callNow) func.apply(this, args);
   };
 }

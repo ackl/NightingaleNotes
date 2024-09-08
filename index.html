@@ -12,5 +12,10 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if (!('ontouchstart' in window || navigator.maxTouchPoints > 0 || navigator.msMaxTouchPoints > 0)) {
+      document.body.classList.add('non-touch');
+      }
+    </script>
   </body>
 </html>

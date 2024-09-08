@@ -5,6 +5,7 @@ body {
   font-variation-settings:
     "ELGR" 1,
     "ELSH" 2;
+  letter-spacing: 3px;
 }
 
 #root {
@@ -185,6 +186,11 @@ button.play {
 }
 
 .modal {
+  display: none;
+}
+
+.non-touch .modal {
+  display: block;
   position: absolute;
   top: 0;
   left: 0;
@@ -196,6 +202,11 @@ button.play {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  pointer-events: none;
+}
+
+.modal button {
+  pointer-events: visible;
 }
 
 .modal.hidden {
@@ -226,4 +237,8 @@ video {
 .diatonic-chords,
 .tonality-controls {
   position: relative;
+}
+
+b {
+  margin-bottom: 1rem;
 }

@@ -47,9 +47,12 @@ export function Ivory({
         ${tonic === note ? 'ivory--tonic' : ''}
         `
       }
-      onClick={() => {
+      onClick={(ev) => {
         //setTonic(note);
         playTone(note + (octave * 12));
+        const $el = ev.target as HTMLElement
+        $el.classList.add('flash');
+        setTimeout(() => $el.classList.remove('flash'), 100);
       }}
     >
       <span className={`ivory-label ${showIvoryLabels && 'show'}`}>

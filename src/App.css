@@ -1,11 +1,8 @@
 body {
-  font-family: "Handjet", sans-serif;
+  font-family: "Montserrat", sans-serif;
   font-optical-sizing: auto;
+  font-weight: <weight>;
   font-style: normal;
-  font-variation-settings:
-    "ELGR" 1,
-    "ELSH" 2;
-  letter-spacing: 3px;
 }
 
 #root {
@@ -48,6 +45,7 @@ main {
   display: flex;
   justify-content: center;
   align-items: end;
+  z-index: 1;
 }
 
 .ivory--4,
@@ -60,7 +58,7 @@ main {
   height: 120px;
   background-color: #000;
   position: relative;
-  z-index: 1;
+  z-index: 2;
   margin-left: -15px;
   left: 8px;
 }
@@ -135,12 +133,24 @@ main {
   }
 }
 
-.active {
-  background-color: #a1a1a1;
+button {
+  margin-right: 1em;
+  margin-bottom: 4px;
+  outline: 0;
 }
 
-.degree-name {
-  min-height: 26px;
+button.play {
+  border-color: #85d785;
+}
+
+/*active button*/
+button.active {
+  background-color: #d6804f;
+}
+
+button:active {
+  background-color: red;
+  transform: scale(0.98); /* simulate button press effect */
 }
 
 #paper {
@@ -154,6 +164,7 @@ main {
   position: absolute;
   top: 1em;
   left: 1em;
+  transform: translate(70px, 20px) scale(2);
 }
 
 .play-button {
@@ -163,7 +174,7 @@ main {
 }
 
 .diatonic-chords {
-  margin-top: 1em;
+  margin-top: 3rem;
 }
 
 .diatonic-chords button {
@@ -174,15 +185,6 @@ main {
   .diatonic-chords button {
     min-width: 66px;
   }
-}
-
-button {
-  margin-right: 1em;
-  margin-bottom: 4px;
-}
-
-button.play {
-  border-color: #85d785;
 }
 
 .modal {
@@ -196,7 +198,7 @@ button.play {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.8);
+  background: #1a1a1acc;
   z-index: 9999;
   display: flex;
   flex-direction: column;
@@ -223,11 +225,11 @@ button.play {
 }
 
 .shadow {
-  background: rgb(133 121 121 / 80%)
+  background: #1e181894;
 }
 
 video {
-  object-fit: cover;
+  object-fit: fill;
   width: 100vw;
   height: 100vh;
   object-position: center;
@@ -237,8 +239,20 @@ video {
 .diatonic-chords,
 .tonality-controls {
   position: relative;
+  min-height: 1lh;
 }
 
 b {
   margin-bottom: 1rem;
+}
+
+
+.flash {
+  animation: flash-animation 0.5s ease;
+}
+
+@keyframes flash-animation {
+  0% { background-color: yellow; }
+  50% { background-color: red; }
+  100% { background-color: yellow; }
 }

@@ -42,8 +42,8 @@ function App() {
       <>
         <div className="video-wrapper">
           <video playsInline autoPlay muted loop>
-            <source src="bg.webm" type="video/webm" />
-            <source src="bg.mp4" type="video/mp4" />
+            <source src="output.webm" type="video/webm" />
+            <source src="output.mp4" type="video/mp4" />
           </video>
         <div className="shadow"></div>
         </div>

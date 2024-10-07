@@ -1,9 +1,9 @@
-import type { ReactNode } from 'react'
-import { useState, useEffect, createContext } from 'react'
+import type { ReactNode } from "react";
+import { useState, useEffect, createContext } from "react";
 
 declare global {
   interface Window {
-    webkitAudioContext?: typeof AudioContext
+    webkitAudioContext?: typeof AudioContext;
   }
 }
 
@@ -20,10 +20,12 @@ const initialAudioContextState: AudioContextState = {
   playSequence: () => {},
   playChord: () => {},
   playTone: () => {},
-  playNotes: () => {}
-}
+  playNotes: () => {},
+};
 
-export const AudioReactContext = createContext<AudioContextState>(initialAudioContextState);
+export const AudioReactContext = createContext<AudioContextState>(
+  initialAudioContextState
+);
 
 // have samples per minor third
 // 0  3   6   9
@@ -32,13 +34,13 @@ export const AudioReactContext = createContext<AudioContextState>(initialAudioCo
 function getSampleForNote(note: number) {
   // first get closest lower sample note label
   const modNote = note % 12;
-  let fileNamePrefix = 'A';
+  let fileNamePrefix = "A";
   if (modNote < 3) {
-    fileNamePrefix = 'C';
+    fileNamePrefix = "C";
   } else if (modNote < 6) {
-    fileNamePrefix = 'Ds';
+    fileNamePrefix = "Ds";
   } else if (modNote < 9) {
-    fileNamePrefix = 'Fs';
+    fileNamePrefix = "Fs";
   }
 
   // append the octave number
@@ -46,23 +48,37 @@ function getSampleForNote(note: number) {
   const octaveNumber = Math.floor(note / 12);
   return {
     sample: `${fileNamePrefix}${octaveNumber + 3}` as SampleName,
-    detune: modNote % 3
-  }
+    detune: modNote % 3,
+  };
 }
 
 const sampleFilenames = [
-  'C2', 'Ds2', 'Fs2', 'A2',
-  'C3', 'Ds3', 'Fs3', 'A3',
-  'C4', 'Ds4', 'Fs4', 'A4',
-  'C5', 'Ds5', 'Fs5', 'A5',
-  'C6', 'Ds6', 'Fs6', 'A6',
+  "C2",
+  "Ds2",
+  "Fs2",
+  "A2",
+  "C3",
+  "Ds3",
+  "Fs3",
+  "A3",
+  "C4",
+  "Ds4",
+  "Fs4",
+  "A4",
+  "C5",
+  "Ds5",
+  "Fs5",
+  "A5",
+  "C6",
+  "Ds6",
+  "Fs6",
+  "A6",
 ] as const;
 
 type SampleName = typeof sampleFilenames[number];
 
-
-type ArrayBuffers = Partial<Record<SampleName, ArrayBuffer>>
-type AudioBuffers = Record<SampleName, AudioBuffer>
+type ArrayBuffers = Partial<Record<SampleName, ArrayBuffer>>;
+type AudioBuffers = Record<SampleName, AudioBuffer>;
 
 class BufferLoader {
   filenames: readonly string[];
@@ -81,8 +97,10 @@ class BufferLoader {
     if (this.fetched) return;
 
     const responses = await Promise.all(
-      sampleFilenames.map(async x => fetch(`/${x}v8.mp3`).then(res => res.arrayBuffer()))
-    )
+      sampleFilenames.map(async (x) =>
+        fetch(`/${x}v8.mp3`).then((res) => res.arrayBuffer())
+      )
+    );
 
     responses.forEach((res, i) => {
       this.arrayBuffers[sampleFilenames[i]] = res;
@@ -95,10 +113,9 @@ class BufferLoader {
     this.audioBuffers = {} as AudioBuffers;
 
     Object.entries(this.arrayBuffers).map(([note, arrayBuf]) => {
-      ctx.decodeAudioData(arrayBuf)
-        .then((sample) => {
-          this.audioBuffers![note as SampleName] = sample;
-        });
+      ctx.decodeAudioData(arrayBuf).then((sample) => {
+        this.audioBuffers![note as SampleName] = sample;
+      });
     });
   }
 }
@@ -110,12 +127,12 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
 
   function playSequence(notes: number[]) {
     notes.forEach((n, i) => {
-      playTone(n, i / 4)
+      playTone(n, i / 4);
     });
   }
 
   function playChord(notes: number[]) {
-    notes.forEach(n => playTone(n, 0));
+    notes.forEach((n) => playTone(n, 0));
   }
 
   function playTone(noteValue: number, when = 0) {
@@ -125,12 +142,23 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
       gainNode.gain.value = 1;
 
       const sampleInfo = getSampleForNote(noteValue);
-      source.buffer = bufferLoader.audioBuffers[sampleInfo.sample]
+      source.buffer = bufferLoader.audioBuffers[sampleInfo.sample];
 
-      source.detune.value = (sampleInfo.detune) * 100;
+      source.detune.value = sampleInfo.detune * 100;
       // we're saying that octave 0 is octave below middle C
       // noteValue is based on C = 0, need to subtract 18 semitones as sample is A440
       //source.detune.value = (noteValue - 18) * 100;
+      const $el = document.querySelector(`.ivory--${noteValue}`);
+      setTimeout(() => {
+        $el?.classList.add("flash");
+      }, when * 1000);
+      setTimeout(function () {
+        $el?.classList.add("flash");
+      }, 6000);
+
+      setTimeout(function () {
+        $el?.classList.remove("flash");
+      }, 10000);
 
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);
@@ -141,14 +169,14 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
   function playNotes(sequence: Sequence) {
     if (!audioContext) {
       setTimeout(() => {
-        const clickEvent = new MouseEvent('click', {
+        const clickEvent = new MouseEvent("click", {
           bubbles: true,
           cancelable: true,
           view: window,
         });
 
         setTimeout(() => {
-          document.querySelector('.play')?.dispatchEvent(clickEvent);
+          document.querySelector(".play")?.dispatchEvent(clickEvent);
         }, 100);
       }, 1);
     } else {
@@ -161,36 +189,38 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
         // this is so that the audioContext sample can use this value
         // to determine how to detune the A440 sample
         const lower = sequence.notes.slice(0, maxIdx + 1);
-        const upper = sequence.notes.slice(maxIdx + 1).map(x => x + 12);
+        const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12);
 
         // since we build notes of a heptatonic add back the octave
         const sequenceNotes = [...lower, ...upper, lower[0] + 12];
-        sequenceNotes.length > 6 ? playSequence(sequenceNotes) : playChord(sequenceNotes)
+        sequenceNotes.length > 6
+          ? playSequence(sequenceNotes)
+          : playChord(sequenceNotes);
       }
     }
   }
 
   useEffect(() => {
     function createAudioContext() {
-      if (typeof AudioContext !== 'undefined') {
+      if (typeof AudioContext !== "undefined") {
         setAudioContext(new AudioContext());
-      } else if (typeof window.webkitAudioContext !== 'undefined') {
+      } else if (typeof window.webkitAudioContext !== "undefined") {
         setAudioContext(new window.webkitAudioContext());
       } else {
-        console.error('Web Audio API is not supported in this browser');
+        console.error("Web Audio API is not supported in this browser");
       }
 
       setInit(true);
     }
 
     if (!init) {
-      document.addEventListener('click', createAudioContext);
-      document.addEventListener('touchend', createAudioContext);
+      document.addEventListener("click", createAudioContext);
+      document.addEventListener("touchend", createAudioContext);
     }
 
     return () => {
-      document.removeEventListener('click', createAudioContext);
-      document.removeEventListener('touchend', createAudioContext);
+      document.removeEventListener("click", createAudioContext);
+      document.removeEventListener("touchend", createAudioContext);
     };
   }, [init]);
 
@@ -215,16 +245,16 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
   }, [audioContext, bufferLoader?.arrayBuffers]);
 
   return (
-    <AudioReactContext.Provider value={{
-      audioContext,
-      playSequence,
-      playChord,
-      playTone,
-      playNotes
-    }}>
+    <AudioReactContext.Provider
+      value={{
+        audioContext,
+        playSequence,
+        playChord,
+        playTone,
+        playNotes,
+      }}
+    >
       {children}
     </AudioReactContext.Provider>
   );
-}
-
-
+};

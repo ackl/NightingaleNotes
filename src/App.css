@@ -239,7 +239,7 @@ video {
 .diatonic-chords,
 .tonality-controls {
   position: relative;
-  min-height: 1lh;
+  min-height: 1lh;.
 }
 
 b {
@@ -248,11 +248,11 @@ b {
 
 
 .flash {
-  animation: flash-animation 0.5s ease;
+  animation: flash-animation 0.3s ease;
 }
 
 @keyframes flash-animation {
-  0% { background-color: yellow; }
-  50% { background-color: red; }
-  100% { background-color: yellow; }
+  0% { background-color: gold; }
+  50% { background-color: goldenrod; }
+  100% { background-color: gold; }
 }

@@ -11,14 +11,14 @@ import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <AudioReactProvider>
-      <SettingsProvider>
+    <SettingsProvider>
+      <AudioReactProvider>
         <NotesProvider>
           <A11yProvider>
             <App />
           </A11yProvider>
         </NotesProvider>
-      </SettingsProvider>
-    </AudioReactProvider>
+      </AudioReactProvider>
+    </SettingsProvider>
   </React.StrictMode>,
 )

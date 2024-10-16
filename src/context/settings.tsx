@@ -10,6 +10,8 @@ interface Settings {
   setTonality: (arg: TONALITY) => void;
   tonic: Note;
   setTonic: (arg: Note) => void;
+  increaseOctaves: () => void;
+  decreaseOctaves: () => void;
 }
 
 const initialSettingsState: Settings = {
@@ -20,6 +22,8 @@ const initialSettingsState: Settings = {
   setTonality: () => {},
   tonic: 0,
   setTonic: () => {},
+  increaseOctaves: () => {},
+  decreaseOctaves: () => {},
 }
 
 export const SettingsContext = createContext<Settings>(initialSettingsState);
@@ -30,6 +34,13 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const [octaves, setOctaves] = useState(initialSettingsState.octaves);
   const [tonality, setTonality] = useState<TONALITY>(initialSettingsState.tonality);
   const [tonic, setTonic] = useState<Note>(0);
+
+  function increaseOctaves() {
+    setOctaves((prev) => prev > 3 ? 4 : prev + 1)
+  }
+  function decreaseOctaves() {
+    setOctaves((prev) => prev < 3 ? 2 : prev - 1)
+  }
 
   function ShowHideButton() {
     return <button
@@ -54,8 +65,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   function OctavesButtons() {
     return <div>
       <label>number of octaves: {octaves}  </label>
-      <button onClick={() => setOctaves((prev) => prev > 3 ? 4 : prev + 1)}>+</button>
-      <button onClick={() => setOctaves((prev) => prev < 3 ? 2 : prev - 1)}>-</button>
+      <button onClick={increaseOctaves}>+</button>
+      <button onClick={decreaseOctaves}>-</button>
     </div>
   }
 
@@ -68,6 +79,8 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
         setTonality,
         tonic,
         setTonic,
+        increaseOctaves,
+        decreaseOctaves
     }}>
       {children}
       <div className='settings-controls'>

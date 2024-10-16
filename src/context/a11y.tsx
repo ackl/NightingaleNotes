@@ -19,6 +19,8 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
     setTonality,
     tonic,
     setTonic,
+    increaseOctaves,
+    decreaseOctaves
   } = useContext(SettingsContext);
 
   const {
@@ -106,6 +108,12 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
           break;
         case "KeyM":
           goToRelative();
+          break;
+        case "Equal":
+          increaseOctaves();
+          break;
+        case "Minus":
+          decreaseOctaves();
           break;
       }
     }

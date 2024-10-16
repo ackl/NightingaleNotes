@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { useState, useEffect, createContext } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
+import {SettingsContext} from "./settings";
 
 declare global {
   interface Window {
@@ -124,6 +125,7 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [init, setInit] = useState(false);
   const [bufferLoader, setBufferLoader] = useState<BufferLoader>();
+  const { octaves } = useContext(SettingsContext);
 
   function playSequence(notes: number[]) {
     notes.forEach((n, i) => {
@@ -163,6 +165,18 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
   }
 
   function playNotes(sequence: Sequence) {
+    function generateSequenceNotes() {
+      const max = Math.max(...sequence.notes);
+      const maxIdx = sequence.notes.indexOf(max as Note);
+
+      const lower = sequence.notes.slice(0, maxIdx + 1);
+      const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12); 
+
+      // since we build notes of a heptatonic add back the octave
+      const sequenceNotes = [...lower, ...upper];
+      return sequenceNotes;
+    }
+
     if (!audioContext) {
       setTimeout(() => {
         const clickEvent = new MouseEvent("click", {
@@ -177,18 +191,12 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
       }, 1);
     } else {
       if (sequence) {
-        const max = Math.max(...sequence.notes);
-        const maxIdx = sequence.notes.indexOf(max as Note);
+        let sequenceNotes = generateSequenceNotes();
+        for (let i = 2; i < octaves; i++) {
+          const nextOctave = sequenceNotes.map(x => (x + (12 * (i - 1))));
+          sequenceNotes = [...sequenceNotes, ...nextOctave]
+        }
 
-        // rearrange so that whole array of notes is only
-        // ascending numbers without the modulo 12
-        // this is so that the audioContext sample can use this value
-        // to determine how to detune the A440 sample
-        const lower = sequence.notes.slice(0, maxIdx + 1);
-        const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12);
-
-        // since we build notes of a heptatonic add back the octave
-        const sequenceNotes = [...lower, ...upper, lower[0] + 12];
         sequenceNotes.length > 6
           ? playSequence(sequenceNotes)
           : playChord(sequenceNotes);

@@ -14,7 +14,7 @@ export function Ivory({ note, octave }: { note: Note; octave: number }) {
   const isFirstOctave = octave === 0;
   const isLastOctave = octave === octaves - 1;
 
-  let isNoteInScale = scale?.notes.includes(note);
+  const isNoteInScale = scale?.notes.includes(note);
   let isHighlight = true;
 
   if (chord) {
@@ -31,18 +31,14 @@ export function Ivory({ note, octave }: { note: Note; octave: number }) {
     <div
       className={`
         ivory
-        ivory--${octave ? octave + 11 + note : note}
+        ivory--${octave ? (octave * 12) + note : note}
         ${isWhiteKey ? "white" : "black"}
         ${isHighlight ? " in-scale" : ""}
         ${chord ? " chord" : ""}
         ${tonic === note ? "ivory--tonic" : ""}
         `}
-      onClick={(ev) => {
-        //setTonic(note);
+      onClick={() => {
         playTone(note + octave * 12);
-        //const $el = ev.target as HTMLElement;
-        //$el.classList.add("flash");
-        //setTimeout(() => $el.classList.remove("flash"), 300);
       }}
     >
       <span className={`ivory-label ${showIvoryLabels && "show"}`}>

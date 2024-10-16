@@ -151,14 +151,10 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
       const $el = document.querySelector(`.ivory--${noteValue}`);
       setTimeout(() => {
         $el?.classList.add("flash");
+        setTimeout(function () {
+          $el?.classList.remove("flash");
+        }, 600);
       }, when * 1000);
-      setTimeout(function () {
-        $el?.classList.add("flash");
-      }, 6000);
-
-      setTimeout(function () {
-        $el?.classList.remove("flash");
-      }, 10000);
 
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);

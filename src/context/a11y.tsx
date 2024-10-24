@@ -1,17 +1,11 @@
 import type { ReactNode } from 'react'
-import { useEffect, useContext, createContext } from 'react'
+import { useEffect, useContext, useCallback, createContext } from 'react'
 import { SettingsContext } from './settings'
 import { AudioReactContext } from './audio'
 import { NotesContext } from './notes'
 import { TONALITY, } from '../lib';
 
-interface A11yState {
-}
-
-const initialA11yState: A11yState = {
-}
-
-export const A11yContext = createContext<A11yState>(initialA11yState);
+export const A11yContext = createContext(null);
 
 export const A11yProvider = ({ children }: { children: ReactNode }) => {
   const {
@@ -34,18 +28,18 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
     setDiatonicChordRoot
   } = useContext(NotesContext);
 
-  function handleTriad(ev: KeyboardEvent) {
+  const handleTriad = useCallback((ev: KeyboardEvent) => {
     // 0 1 2 3 4 5
     // D i g i t 1
     const noteInScale = (parseInt(ev.code[5]) -1) as Note
     if (diatonicChordRoot === noteInScale) {
       setDiatonicChordRoot(undefined);
     } else {
-      setDiatonicChordRoot(noteInScale)
+      setDiatonicChordRoot(noteInScale);
     }
-  }
+  }, [diatonicChordRoot, setDiatonicChordRoot]);
 
-  function handleTonality(prev: boolean) {
+  const handleTonality = useCallback((prev: boolean) => {
     const values = Object.values(TONALITY);
     const keys = Object.keys(TONALITY);
     const currentIndex = values.indexOf(tonality);
@@ -58,9 +52,9 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
     (currentIndex + 1) % values.length
 
     setTonality(TONALITY[keys[nextIndex]])
-  }
+  }, [tonality, setTonality]);
 
-  function goToRelative() {
+  const goToRelative = useCallback(() => {
     if (tonality === TONALITY.MAJOR) {
       setTonic((tonic + 9) % 12 as Note);
       setTonality(TONALITY.MINOR_NATURAL);
@@ -68,7 +62,7 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
       setTonality(TONALITY.MAJOR);
       setTonic((tonic + 3) % 12 as Note);
     }
-  }
+  }, [tonic, setTonic, tonality, setTonality]);
 
   useEffect(() => {
     function callback(ev: KeyboardEvent) {
@@ -123,13 +117,12 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       document.removeEventListener('keydown', callback);
     }
-  }, [chord, scale, tonic, setTonic, tonality, setTonality])
+  }, [chord, scale, tonic, setTonic, tonality, setTonality, increaseOctaves, decreaseOctaves, goToRelative, handleTonality, handleTriad, playNotes])
 
 
 
   return (
-    <A11yContext.Provider value={{
-    }}>
+    <A11yContext.Provider value={null}>
       {children}
     </A11yContext.Provider>
   );

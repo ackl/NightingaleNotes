@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, createContext, useContext, useCallback } from "react";
 import {SettingsContext} from "./settings";
 
 declare global {
@@ -164,18 +164,38 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  function playNotes(sequence: Sequence) {
-    function generateSequenceNotes() {
-      const max = Math.max(...sequence.notes);
-      const maxIdx = sequence.notes.indexOf(max as Note);
+  function generateSequenceNotes(sequence) {
+    const max = Math.max(...sequence.notes);
+    const maxIdx = sequence.notes.indexOf(max as Note);
 
-      const lower = sequence.notes.slice(0, maxIdx + 1);
-      const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12); 
+    // rearrange so that whole array of notes is only
+    // ascending numbers without the modulo 12
+    // this is so that the audioContext sample can use this value
+    // to determine how to detune the A440 sample
+    const lower = sequence.notes.slice(0, maxIdx + 1);
 
-      // since we build notes of a heptatonic add back the octave
-      const sequenceNotes = [...lower, ...upper];
+    //const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12);
+    const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12); 
+
+    // since we build notes of a heptatonic add back the octave
+    const sequenceNotes = [...lower, ...upper, lower[0] + 12];
+    return sequenceNotes;
+  }
+
+  const buildWholeSequence = useCallback((sequence: Sequence) => {
+      let sequenceNotes = generateSequenceNotes(sequence);
+      for (let i = 2; i < octaves; i++) {
+        const nextOctave: number[] = [];
+        for (let j = 0; j < 8; j++) {
+          nextOctave.push((sequenceNotes[j] + (12 * (i - 1))))
+        }
+        sequenceNotes = Array.from(new Set([...sequenceNotes, ...nextOctave]))
+      }
+
       return sequenceNotes;
-    }
+  }, [octaves]);
+
+  function playNotes(sequence: Sequence) {
 
     if (!audioContext) {
       setTimeout(() => {
@@ -191,13 +211,10 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
       }, 1);
     } else {
       if (sequence) {
-        let sequenceNotes = generateSequenceNotes();
-        for (let i = 2; i < octaves; i++) {
-          const nextOctave = sequenceNotes.map(x => (x + (12 * (i - 1))));
-          sequenceNotes = [...sequenceNotes, ...nextOctave]
-        }
 
-        sequenceNotes.length > 6
+        const sequenceNotes = buildWholeSequence(sequence);
+
+        sequenceNotes.length > 7
           ? playSequence(sequenceNotes)
           : playChord(sequenceNotes);
       }

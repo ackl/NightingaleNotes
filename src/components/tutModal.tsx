@@ -1,8 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 export const TutModal = () => {
     function closeHandler(ev: KeyboardEvent) {
-      console.log("SHIT", ev.code);
       if (ev.code === 'Escape') {
         document.body.classList.toggle('non-touch');
       }

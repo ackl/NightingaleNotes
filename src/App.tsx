@@ -13,9 +13,9 @@ import { Keyboard } from './components/keyboard'
 import { TutModal } from './components/tutModal'
 
 function App() {
-  const {tonality, tonic, setTonic, octaves} = useContext(SettingsContext);
-  const {scale, chord} = useContext(NotesContext);
-  const {playNotes} = useContext(AudioReactContext);
+  const { tonality, tonic, setTonic, octaves } = useContext(SettingsContext);
+  const { scale, chord } = useContext(NotesContext);
+  const { playNotes } = useContext(AudioReactContext);
   const $mainRef = useRef<HTMLElement>(null);
 
   function keyboardOverflowHandler() {
@@ -36,7 +36,6 @@ function App() {
   useEffect(() => {
     keyboardOverflowHandler();
   }, [octaves])
-
 
   return (
       <>

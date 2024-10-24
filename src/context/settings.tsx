@@ -38,6 +38,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   function increaseOctaves() {
     setOctaves((prev) => prev > 3 ? 4 : prev + 1)
   }
+
   function decreaseOctaves() {
     setOctaves((prev) => prev < 3 ? 2 : prev - 1)
   }

@@ -122,24 +122,39 @@ class BufferLoader {
 }
 
 export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
-  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
-  const [init, setInit] = useState(false);
-  const [bufferLoader, setBufferLoader] = useState<BufferLoader>();
+  const [ audioContext, setAudioContext ] = useState<AudioContext | null>(null);
+  const [ init, setInit] = useState(false);
+  const [ bufferLoader, setBufferLoader ] = useState<BufferLoader>();
+  const [ activeSources, setActiveSources ] = useState<AudioBufferSourceNode[]>([]);
   const { octaves } = useContext(SettingsContext);
 
+  function stopAllSources() {
+    activeSources.forEach(source => {
+      try {
+        source.stop();
+      } catch (e) {
+        console.log(e);
+      }
+    });
+    setActiveSources([]);
+  }
+
   function playSequence(notes: number[]) {
+    stopAllSources();
     notes.forEach((n, i) => {
       playTone(n, i / 4);
     });
   }
 
   function playChord(notes: number[]) {
+    stopAllSources();
     notes.forEach((n) => playTone(n, 0));
   }
 
   function playTone(noteValue: number, when = 0) {
     if (audioContext && bufferLoader?.audioBuffers) {
       const source = audioContext.createBufferSource();
+      setActiveSources(prev => [...prev, source]);
       const gainNode = audioContext.createGain();
       gainNode.gain.value = 1;
 
@@ -163,6 +178,7 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
       source.start(audioContext.currentTime + when);
     }
   }
+
 
   function generateSequenceNotes(sequence) {
     const max = Math.max(...sequence.notes);

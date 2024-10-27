@@ -5,7 +5,7 @@ import { AudioReactContext } from './audio'
 import { NotesContext } from './notes'
 import { TONALITY, } from '../lib';
 
-export const A11yContext = createContext(null);
+export const A11yContext = createContext<null>(null);
 
 export const A11yProvider = ({ children }: { children: ReactNode }) => {
   const {
@@ -29,8 +29,11 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
   } = useContext(NotesContext);
 
   const handleTriad = useCallback((ev: KeyboardEvent) => {
-    // 0 1 2 3 4 5
-    // D i g i t 1
+    /* 0 1 2 3 4 5
+    * D i g i t 1
+    * ev.code will be like Digit1 Digit2 etc based on which
+    * digit key they pressed, so we just take the number and
+    * typecast it */
     const noteInScale = (parseInt(ev.code[5]) -1) as Note
     if (diatonicChordRoot === noteInScale) {
       setDiatonicChordRoot(undefined);
@@ -40,18 +43,10 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
   }, [diatonicChordRoot, setDiatonicChordRoot]);
 
   const handleTonality = useCallback((prev: boolean) => {
-    const values = Object.values(TONALITY);
-    const keys = Object.keys(TONALITY);
-    const currentIndex = values.indexOf(tonality);
-
-    // calculate the next index,
-    // wrapping around to 0 if it's at the end
-    // or wrapping around to end if it's at the start
-    const nextIndex = prev ?
-    (currentIndex - 1 + values.length) % values.length :
-    (currentIndex + 1) % values.length
-
-    setTonality(TONALITY[keys[nextIndex]])
+    const entries = Object.entries(TONALITY);
+    const currentIndex = entries.findIndex(([_, value]) => value === tonality);
+    const nextIndex = (currentIndex + (prev ? -1 : 1) + entries.length) % entries.length;
+    setTonality(entries[nextIndex][1]);
   }, [tonality, setTonality]);
 
   const goToRelative = useCallback(() => {
@@ -64,61 +59,57 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [tonic, setTonic, tonality, setTonality]);
 
+  const keypressCallback = useCallback((ev: KeyboardEvent) => {
+    let newTonic: Note;
+
+    switch (ev.code) {
+      case "Space":
+        playNotes((chord || scale) as Sequence);
+        ev.preventDefault();
+        break;
+      case "KeyJ":
+      case "ArrowUp":
+        newTonic = ((tonic - 1 + 12) % 12) as Note
+        setTonic(newTonic)
+        break;
+      case "KeyK":
+      case "ArrowDown":
+        newTonic = (tonic + 1) % 12 as Note
+        setTonic(newTonic)
+        break;
+      case "KeyH":
+      case "ArrowLeft":
+        handleTonality(true);
+        break;
+      case "KeyL":
+      case "ArrowRight":
+        handleTonality(false);
+        break;
+      case "Digit1":
+      case "Digit2":
+      case "Digit3":
+      case "Digit4":
+      case "Digit5":
+      case "Digit6":
+      case "Digit7":
+        handleTriad(ev);
+        break;
+      case "KeyM":
+        goToRelative();
+        break;
+      case "Equal":
+        increaseOctaves();
+        break;
+      case "Minus":
+        decreaseOctaves();
+        break;
+    }
+  }, [chord, scale, tonic, setTonic, increaseOctaves, decreaseOctaves, goToRelative, handleTonality, handleTriad, playNotes]);
+
   useEffect(() => {
-    function callback(ev: KeyboardEvent) {
-      let newTonic: Note;
-
-      switch (ev.code) {
-        case "Space":
-          playNotes((chord || scale) as Sequence);
-          ev.preventDefault();
-          break;
-        case "KeyJ":
-        case "ArrowUp":
-          newTonic = ((tonic - 1 + 12) % 12) as Note
-          setTonic(newTonic)
-          break;
-        case "KeyK":
-        case "ArrowDown":
-          newTonic = (tonic + 1) % 12 as Note
-          setTonic(newTonic)
-          break;
-        case "KeyH":
-        case "ArrowLeft":
-          handleTonality(true);
-          break;
-        case "KeyL":
-        case "ArrowRight":
-          handleTonality(false);
-          break;
-        case "Digit1":
-        case "Digit2":
-        case "Digit3":
-        case "Digit4":
-        case "Digit5":
-        case "Digit6":
-        case "Digit7":
-          handleTriad(ev);
-          break;
-        case "KeyM":
-          goToRelative();
-          break;
-        case "Equal":
-          increaseOctaves();
-          break;
-        case "Minus":
-          decreaseOctaves();
-          break;
-      }
-    }
-
-    document.addEventListener('keydown', callback);
-
-    return () => {
-      document.removeEventListener('keydown', callback);
-    }
-  }, [chord, scale, tonic, setTonic, tonality, setTonality, increaseOctaves, decreaseOctaves, goToRelative, handleTonality, handleTriad, playNotes])
-
+    document.addEventListener('keydown', keypressCallback);
+    return () => document.removeEventListener('keydown', keypressCallback);
+  }, [keypressCallback]);
 
 
   return (

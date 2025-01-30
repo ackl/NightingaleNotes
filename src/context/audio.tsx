@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useState, useEffect, createContext, useContext, useCallback } from "react";
-import {SettingsContext} from "./settings";
+import { SettingsContext } from "./settings";
+import { Note } from "../lib";
 
 declare global {
   interface Window {

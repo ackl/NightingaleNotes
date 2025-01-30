@@ -2,35 +2,48 @@ import type { ReactNode } from 'react'
 import { useState, useEffect, useContext, createContext } from 'react'
 import { SettingsContext } from './settings'
 import {
-  getScale,
+  getKeySignatures,
   buildDiatonicTriads,
   getDiatonicChordRomanNumerals,
-  diatonicDegreeNames
+  diatonicDegreeNames,
+  Note,
+  Sequence,
+  KeySignature,
+  TONALITY
 } from '../lib';
 
 
 interface NotesState {
   diatonicChordRoot?: Note;
   setDiatonicChordRoot: (arg?: Note) => void;
-  scale?: Sequence;
-  setScale: (arg: Sequence) => void,
+  keySignatures: KeySignature[],
+  keySignature: KeySignature,
+  chosenKeySigIdx: number;
+  setChosenKeySigIdx: (arg: number) => void;
+  // scale?: Sequence;
+  // setScale: (arg: Sequence) => void,
   chord?: Sequence;
   setChord: (arg?: Sequence) => void;
 }
 
 const initialNotesState: NotesState = {
   setDiatonicChordRoot: () => {},
-  setScale: () => {},
   setChord: () => {},
+  setChosenKeySigIdx: () => {},
+  keySignatures: getKeySignatures(0, TONALITY.MAJOR),
+  keySignature: getKeySignatures(0, TONALITY.MAJOR)[0],
+  chosenKeySigIdx: 0
 }
 
 export const NotesContext = createContext<NotesState>(initialNotesState);
 
 export const NotesProvider = ({ children }: { children: ReactNode }) => {
-  const [scale, setScale] = useState<Sequence | undefined>();
   const [diatonicChords, setDiatonicChords] = useState<Sequence[] | undefined>();
   const [diatonicChordRoot, setDiatonicChordRoot] = useState<Note | undefined>();
   const [chord, setChord] = useState<Sequence | undefined>();
+  const [keySignatures, setKeySignatures] = useState<KeySignature[]>(initialNotesState.keySignatures);
+  const [keySignature, setKeySignature] = useState<KeySignature>(initialNotesState.keySignatures[initialNotesState.chosenKeySigIdx]);
+  const [chosenKeySigIdx, setChosenKeySigIdx] = useState<number>(initialNotesState.chosenKeySigIdx);
 
   const {
     tonality,
@@ -38,9 +51,17 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
   } = useContext(SettingsContext);
 
   useEffect(() => {
-    setScale(getScale(tonic, tonality));
-    setDiatonicChords(buildDiatonicTriads(tonic, tonality))
+    const keySigs = getKeySignatures(tonic, tonality)
+    setKeySignatures(keySigs);
   }, [tonic, tonality]);
+
+  useEffect(() => {
+    setKeySignature(keySignatures[chosenKeySigIdx]);
+  }, [keySignatures, chosenKeySigIdx]);
+
+  useEffect(() => {
+    setDiatonicChords(buildDiatonicTriads(keySignature))
+  }, [keySignature]);
 
   useEffect(() => {
     if (diatonicChords && diatonicChordRoot !== undefined) {
@@ -52,12 +73,14 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <NotesContext.Provider value={{
-      scale,
-      setScale,
       chord,
       setChord,
       diatonicChordRoot,
-      setDiatonicChordRoot
+      setDiatonicChordRoot,
+      keySignatures,
+      keySignature,
+      chosenKeySigIdx,
+      setChosenKeySigIdx
     }}>
       {children}
       <div className='diatonic-chords'>

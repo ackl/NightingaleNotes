@@ -1,15 +1,17 @@
 import { useEffect, useContext } from 'react'
-import { NotesContext, SettingsContext } from '../context';
-import { TONALITY, getMajorKeyLabel } from '../lib'
+import { SettingsContext, NotesContext } from '../context';
+import { Note, TONALITY, getMajorKeyLabel } from '../lib'
 import abcjs from 'abcjs';
 
 export function KeySignature() {
   const { tonic, tonality } = useContext(SettingsContext);
-  const { chord } = useContext(NotesContext);
+  const { keySignature } = useContext(NotesContext);
 
   useEffect(() => {
-    const key = tonality === TONALITY.MAJOR ?
-      getMajorKeyLabel(tonic) : getMajorKeyLabel((tonic + 3) % 12 as Note);
+    let key = `${keySignature.scaleAscending.labels[0]}${keySignature.tonality === TONALITY.MAJOR ? '' : 'm'}`;
+    key = key.replace('♭', 'b');
+    key = key.replace('♯', '#');
+    console.log('trying to render key: ', key);
     //let notes = '';
 
     //if (chord) {
@@ -18,7 +20,7 @@ export function KeySignature() {
 
     abcjs.renderAbc('paper', `X:1\nK:${key}\n|\n`);
 
-  }, [tonic, chord, tonality]);
+  }, [keySignature]);
 
   return <div id='paper'></div>
 }

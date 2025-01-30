@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useState, createContext } from 'react'
-import { TONALITY, } from '../lib';
+import { Note, TONALITY, } from '../lib';
 
 interface Settings {
   showIvoryLabels: boolean;

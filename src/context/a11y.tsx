@@ -3,7 +3,7 @@ import { useEffect, useContext, useCallback, createContext } from 'react'
 import { SettingsContext } from './settings'
 import { AudioReactContext } from './audio'
 import { NotesContext } from './notes'
-import { TONALITY, } from '../lib';
+import { Note, TONALITY, } from '../lib';
 
 export const A11yContext = createContext<null>(null);
 
@@ -23,7 +23,7 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
 
   const {
     chord,
-    scale,
+    keySignature,
     diatonicChordRoot,
     setDiatonicChordRoot
   } = useContext(NotesContext);
@@ -64,7 +64,7 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
 
     switch (ev.code) {
       case "Space":
-        playNotes((chord || scale) as Sequence);
+        playNotes(chord || keySignature.scaleAscending);
         ev.preventDefault();
         break;
       case "KeyJ":
@@ -104,7 +104,7 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
         decreaseOctaves();
         break;
     }
-  }, [chord, scale, tonic, setTonic, increaseOctaves, decreaseOctaves, goToRelative, handleTonality, handleTriad, playNotes]);
+  }, [chord, keySignature, tonic, setTonic, increaseOctaves, decreaseOctaves, goToRelative, handleTonality, handleTriad, playNotes]);
 
   useEffect(() => {
     document.addEventListener('keydown', keypressCallback);

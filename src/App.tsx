@@ -4,7 +4,9 @@ import {
   notes,
   getMajorKeyLabel,
   getMinorKeyLabel,
-  throttle
+  throttle,
+  Note,
+  Sequence
 } from './lib';
 import './App.css'
 import { NotesContext, SettingsContext, AudioReactContext } from './context'
@@ -14,9 +16,11 @@ import { TutModal } from './components/tutModal'
 
 function App() {
   const { tonality, tonic, setTonic, octaves } = useContext(SettingsContext);
-  const { scale, chord } = useContext(NotesContext);
+  const { keySignatures, keySignature, setChosenKeySigIdx } = useContext(NotesContext);
   const { playNotes } = useContext(AudioReactContext);
   const $mainRef = useRef<HTMLElement>(null);
+  const enharmonicEquivTonics = keySignatures.map(ks => {return ks.tonic})
+  console.log(keySignatures, enharmonicEquivTonics);
 
   function keyboardOverflowHandler() {
     if ($mainRef.current) {
@@ -50,7 +54,7 @@ function App() {
         <section className='play-button'>
           <button
             className='play'
-            onClick={() => {playNotes((chord || scale) as Sequence)}}
+            onClick={() => {playNotes(keySignature.scaleAscending)}}
           >►</button>
         </section>
         <section className="key-selector">

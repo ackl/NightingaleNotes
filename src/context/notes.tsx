@@ -20,15 +20,11 @@ interface NotesState {
   keySignature: KeySignature,
   chosenKeySigIdx: number;
   setChosenKeySigIdx: (arg: number) => void;
-  // scale?: Sequence;
-  // setScale: (arg: Sequence) => void,
   chord?: Sequence;
-  setChord: (arg?: Sequence) => void;
 }
 
 const initialNotesState: NotesState = {
   setDiatonicChordRoot: () => {},
-  setChord: () => {},
   setChosenKeySigIdx: () => {},
   keySignatures: getKeySignatures(0, TONALITY.MAJOR),
   keySignature: getKeySignatures(0, TONALITY.MAJOR)[0],
@@ -38,11 +34,8 @@ const initialNotesState: NotesState = {
 export const NotesContext = createContext<NotesState>(initialNotesState);
 
 export const NotesProvider = ({ children }: { children: ReactNode }) => {
-  const [diatonicChords, setDiatonicChords] = useState<Sequence[] | undefined>();
   const [diatonicChordRoot, setDiatonicChordRoot] = useState<Note | undefined>();
-  const [chord, setChord] = useState<Sequence | undefined>();
   const [keySignatures, setKeySignatures] = useState<KeySignature[]>(initialNotesState.keySignatures);
-  const [keySignature, setKeySignature] = useState<KeySignature>(initialNotesState.keySignatures[initialNotesState.chosenKeySigIdx]);
   const [chosenKeySigIdx, setChosenKeySigIdx] = useState<number>(initialNotesState.chosenKeySigIdx);
 
   const {
@@ -52,29 +45,20 @@ export const NotesProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const keySigs = getKeySignatures(tonic, tonality)
+    if (keySigs.length < 2) {
+      setChosenKeySigIdx(0);
+    }
     setKeySignatures(keySigs);
   }, [tonic, tonality]);
 
-  useEffect(() => {
-    setKeySignature(keySignatures[chosenKeySigIdx]);
-  }, [keySignatures, chosenKeySigIdx]);
 
-  useEffect(() => {
-    setDiatonicChords(buildDiatonicTriads(keySignature))
-  }, [keySignature]);
-
-  useEffect(() => {
-    if (diatonicChords && diatonicChordRoot !== undefined) {
-      setChord(diatonicChords[diatonicChordRoot]);
-    } else {
-      setChord(undefined);
-    }
-  }, [diatonicChordRoot, diatonicChords]);
+  const keySignature = keySignatures[chosenKeySigIdx];
+  const diatonicChords = buildDiatonicTriads(keySignature);
+  const chord = (diatonicChords && diatonicChordRoot !== undefined) ? diatonicChords[diatonicChordRoot] : undefined;
 
   return (
     <NotesContext.Provider value={{
       chord,
-      setChord,
       diatonicChordRoot,
       setDiatonicChordRoot,
       keySignatures,

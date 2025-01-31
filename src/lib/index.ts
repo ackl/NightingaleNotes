@@ -36,7 +36,6 @@ type KeySignatureAccidentalType = Exclude<AccidentalName, 'DOUBLE_FLAT' | 'DOUBL
 
 // can also use this as the intervals of a Maj scale
 export const whiteKeys: Note[] =  [0, 2, 4, 5, 7, 9, 11];
-export const blackKeys: Note[] =  [1, 3, 6, 8, 10]
 
 export const SHARP_ORDER: Note[] = [5, 0, 7, 2, 9, 4, 11];  // F, C, G, D, A, E, B
 export const FLAT_ORDER: Note[] = [11, 4, 9, 2, 7, 0, 5];   // B, E, A, D, G, C, F
@@ -84,25 +83,16 @@ function getBaseLetters(tonicBase: NoteLabelBase): NoteLabelBase[] {
     return wrapArray([...noteLabels], startIndex);
 }
 
-const baseToNatural: Record<NoteLabelBase, Note> = {
-    'C': 0,
-    'D': 2,
-    'E': 4,
-    'F': 5,
-    'G': 7,
-    'A': 9,
-    'B': 11,
-};
+function labelToNote(noteLabel: NoteLabelBase) {
+  const idx = noteLabels.indexOf(noteLabel);
+  return whiteKeys[idx];
+}
 
-function findBaseLetterAndAccidental(note: Note, accidentalType?: 'SHARP' | 'FLAT'): { base: NoteLabelBase, accidental: AccidentalSymbol | '' } {
+function findBaseLetterAndAccidental(note: Note, accidentalType: KeySignatureAccidentalType): { base: NoteLabelBase, accidental: AccidentalSymbol | '' } {
     if (accidentalType === 'FLAT') {
-      if (note === 11) {
-        return { base: 'C', accidental: accidentals.FLAT };
-      }
-
       for (const base of noteLabels) {
-        const natural = baseToNatural[base];
-        if ((natural - 1 + 12) % 12 === note) {
+        const notePredicate = labelToNote(base);
+        if ((notePredicate - 1 + 12) % 12 === note) {
             return { base, accidental: accidentals.FLAT };
         }
       }
@@ -110,17 +100,16 @@ function findBaseLetterAndAccidental(note: Note, accidentalType?: 'SHARP' | 'FLA
 
     if (accidentalType === 'SHARP') {
       for (const base of noteLabels) {
-        const natural = baseToNatural[base];
-        if ((natural + 1) % 12 === note) {
+        const notePredicate = labelToNote(base);
+        if ((notePredicate + 1) % 12 === note) {
           return { base, accidental: accidentals.SHARP };
         }
       }
     }
 
     for (const base of noteLabels) {
-        const natural = baseToNatural[base];
-        console.log({base, natural});
-        if (natural === note) {
+        const notePredicate = labelToNote(base);
+        if (notePredicate === note) {
             return { base, accidental: '' };
         }
     }
@@ -130,16 +119,28 @@ function findBaseLetterAndAccidental(note: Note, accidentalType?: 'SHARP' | 'FLA
 
 function calculateDifference(actualNote: Note, naturalNote: Note): number {
     let difference = actualNote - naturalNote;
-    if (difference > 6) {
-        difference -= 12;
-    } else if (difference < -6) {
-        difference += 12;
+    if (difference > 2) {
+        difference = (difference - 12) % 12;
+    } else if (difference < -2) {
+        difference = (difference + 12) % 12;
     }
+
     return difference;
 }
 
-function getAccidentalSymbol(difference: number): AccidentalSymbol | '' {
-    if (difference === 0) return '';
+function getAccidentalSymbol(difference: number, tonality: TONALITY, idx: number): AccidentalSymbol | '' {
+    if (difference === 0) {
+      if (tonality === TONALITY.MAJOR) {
+        return '';
+      }
+
+      if (tonalityIntervals[tonality][idx] !== tonalityIntervals[TONALITY.MINOR_NATURAL][idx]) {
+        return accidentals.NATURAL;
+      }
+
+      return '';
+    }
+
     if (difference === 1) return accidentals.SHARP;
     if (difference === -1) return accidentals.FLAT;
     if (difference === 2) return accidentals.DOUBLE_SHARP;
@@ -150,7 +151,6 @@ function getAccidentalSymbol(difference: number): AccidentalSymbol | '' {
 
 export function getKeySignatures(tonic: Note, tonality: TONALITY): KeySignature[] {
     // Adjust tonic for minor tonalities to their relative major
-    console.log('getting keysig for tonic:', tonic);
     let adjustedTonic = tonic;
     if (tonality !== TONALITY.MAJOR) {
         adjustedTonic = (tonic + 3) % 12 as Note;
@@ -188,7 +188,7 @@ export function getKeySignatures(tonic: Note, tonality: TONALITY): KeySignature[
     } else if (index >= 8 && index <= 11) {
         accidentalTypes.push('FLAT');
     } else {
-        accidentalTypes.push('SHARP', 'FLAT');
+        accidentalTypes.push('FLAT', 'SHARP');
     }
 
     // Generate key signatures for each accidental type
@@ -203,29 +203,15 @@ export function getKeySignatures(tonic: Note, tonality: TONALITY): KeySignature[
 
         // Determine original tonic's base letter and accidental
         const tonicInfo = findBaseLetterAndAccidental(tonic, type);
-        console.log({tonicInfo})
         const baseLetters = getBaseLetters(tonicInfo.base);
 
         // Calculate labels considering key accidentals and scale alterations
         const labels = scaleNotes.map((note, i) => {
             const baseLetter = baseLetters[i];
-            const naturalNote = baseToNatural[baseLetter];
-            
-            // Check if this note is affected by key signature
-            const keyAdjustedNote = accidentalsList.includes(naturalNote)
-                ? type === 'SHARP'
-                    ? (naturalNote + 1) % 12
-                    : (naturalNote - 1 + 12) % 12
-                : naturalNote;
-
-            if (note === keyAdjustedNote) {
-                const accidental = accidentalsList.includes(naturalNote) ? accidentals[type] : '';
-                return accidental ? `${baseLetter}${accidental}` : baseLetter;
-            } else {
-                const difference = calculateDifference(note, naturalNote);
-                const accidental = getAccidentalSymbol(difference);
-                return accidental ? `${baseLetter}${accidental}` : baseLetter;
-            }
+            const naturalNote = labelToNote(baseLetter);
+            const difference = calculateDifference(note, naturalNote);
+            const accidental = getAccidentalSymbol(difference, tonality, i);
+            return `${baseLetter}${accidental}`;
         }) as NoteLabel[];
 
         keySignatures.push({
@@ -319,42 +305,21 @@ const tonalityUtilsMap = {
     [TONALITY.MINOR_NATURAL]: minorNaturalScaleDiatonicChordRomanNumerals,
     [TONALITY.MINOR_HARMONIC]: minorHarmonicScaleDiatonicChordRomanNumerals,
     [TONALITY.MINOR_MELODIC]: minorMelodicScaleDiatonicChordRomanNumerals
-  },
-  scaleFunction: {
-    [TONALITY.MAJOR]: getMajorScale,
-    [TONALITY.MINOR_NATURAL]: getMinorNaturalScale,
-    [TONALITY.MINOR_HARMONIC]: getMinorHarmonicScale,
-    [TONALITY.MINOR_MELODIC]: getMinorMelodicScale,
-  },
+  }
 }
 
 export function buildDiatonicTriads(keySignature: KeySignature): Sequence[] {
   const scale = keySignature.scaleAscending;
-  //const tonicLabel = tonality === TONALITY.MAJOR ?
-    //majorKeyLabels[tonic][0] : minorKeyLabels[tonic][0];
-
-  //const tonicLabelIdx = noteLabels.indexOf(tonicLabel);
-
   return scale.notes.map((root, i) => {
-    //const rootNoteLabel = noteLabels[(tonicLabelIdx + i) % 12]
     const chordType = tonalityUtilsMap['triads'][keySignature.tonality][i]
     const triad = buildChord(root as Note, chordType)
 
     return {
-      //labels: getTriadLabel(rootNoteLabel),
       labels: [],
       notes: triad
     }
   });
 }
-
-//function getTriadLabel(noteLabel: string) {
-  //const idx = noteLabels.indexOf(noteLabel);
-  //const thirdIndex = (idx + 2) % 12;
-  //const fifthIndex = (idx + 4) % 12;
-
-  //return [noteLabel, noteLabels[thirdIndex], noteLabels[fifthIndex]];
-//}
 
 export const diatonicDegreeNames = [
   'Tonic',
@@ -375,251 +340,6 @@ export function getMajorKeyLabel(note: Note) {
 
 export function getMinorKeyLabel(note: Note) {
   return minorKeyLabels[notes.indexOf(note)]
-}
-
-
-export function getNoteLabel(tonic: Note, note: Note, tonality: TONALITY) {
-  if (tonality === TONALITY.MINOR_MELODIC) {
-    // since default return is to flatten label, use sharpened enharmonic for
-    // 7th degree for some cases to maintain diatonic scale spelling. i.e:
-    // C into B# if tonic is C#
-    // Db into C# if tonic is D
-    // F into E# if tonic is F#
-    // Gb into F# if tonic is G
-    if ([1, 2, 6, 7].includes(tonic) && note === (tonic - 1)) {
-      return sharpen(note ? note : 12 as Note);
-    }
-
-    // make E into E# if tonic is G#
-    // make G into Fx if tonic is G#
-    if (tonic === 8) {
-      if (note === 5) {
-        return sharpen(5);
-      }
-      if (note === 7) {
-        return doubleSharp(note - 2 as Note);
-      }
-    }
-
-    // make Gb into F# if tonic is A
-    // make Ab into G# if tonic is A
-    if (tonic === 9) {
-      if (note === 6) {
-        return sharpen(6);
-      }
-      if (note === 8) {
-        return sharpen(8);
-      }
-    }
-
-
-    if (whiteKeys.includes(note)) {
-      return noteLabels[whiteKeys.indexOf(note)];
-    }
-
-    // e b f# c# g# use sharps
-    if ([1, 4, 6, 8, 11].includes(tonic)) {
-      return sharpen(note);
-    }
-
-    // d eb g c f bb
-    return flatten(note);
-  } else if (tonality === TONALITY.MINOR_NATURAL) {
-    // make B into Cb if tonic is Eb
-    if (tonic === 3 && note === 11) {
-      return flatten(-1 as Note);
-    }
-
-    if (whiteKeys.includes(note)) {
-      return noteLabels[whiteKeys.indexOf(note)];
-    }
-
-    // e b f# c# g# use sharps
-    if ([1, 4, 6, 8, 11].includes(tonic)) {
-      return sharpen(note);
-    }
-
-    if (note === 12 as Note) {
-      return natural(0);
-    }
-    // d eb g c f bb
-    return flatten(note);
-  } else if (tonality === TONALITY.MINOR_HARMONIC) {
-    // make F into E# if tonic is F#
-    if (tonic === 6 && note === 5) {
-      return sharpen(5);
-    }
-
-    // if we're on the 7th degree, sharpen
-    if ((note + 1) % 12 === tonic) {
-      // if g# minor, double sharp the 7th
-      if (tonic === 8) {
-        return doubleSharp(note - 2 as Note);
-      }
-
-      if (whiteKeys.includes(note)) {
-        return natural(note);
-      }
-
-      return sharpen(note);
-    }
-
-    // make B into Cb if tonic is Eb
-    if (tonic === 3 && note === 11) {
-      return flatten(-1 as Note);
-    }
-
-    if (whiteKeys.includes(note)) {
-      return noteLabels[whiteKeys.indexOf(note)];
-    }
-
-    // e b f# c# g# use sharps
-    if ([1, 4, 6, 8, 11].includes(tonic)) {
-      return sharpen(note);
-    }
-
-    if (note === 12 as Note) {
-      return natural(0);
-    }
-
-    // d eb g c f bb
-    return flatten(note);
-  }
-
-  // major
-  // make B into Cb if tonic is Gb
-  if (tonic === 6 && note === 11) {
-    return flatten(-1 as Note);
-  }
-
-  if (whiteKeys.includes(note)) {
-    return noteLabels[whiteKeys.indexOf(note)];
-  }
-
-  // Use flat in key sig if tonic is F
-  if (whiteKeys.includes(tonic) && tonic !== 5) {
-    return sharpen(note);
-  }
-
-  return flatten(note);
-}
-
-export function sharpen(note: Note) {
-  const idx = whiteKeys.indexOf(note - 1);
-  return `${noteLabels[idx]}${accidental['SHARP']}`
-}
-export function flatten(note: Note) {
-  const idx = whiteKeys.indexOf(note + 1);
-  return `${noteLabels[idx]}${accidental['FLAT']}`
-}
-export function natural(note: Note) {
-  const idx = whiteKeys.indexOf(note);
-  return `${noteLabels[idx]}${accidental['NATURAL']}`
-  //return `${noteLabels[idx]}`
-}
-export function doubleSharp(note: Note) {
-  const idx = whiteKeys.indexOf(note);
-  return `${noteLabels[idx]}${accidental['DOUBLE_SHARP']}`
-}
-
-export function generateScale(tonic: Note, scaleType: TONALITY, getScaleNotes: (tonic: Note) => number[]) {
-  const scaleNotes = getScaleNotes(tonic);
-  const scaleLabels = scaleNotes.map(n => getNoteLabel(tonic, n as Note, scaleType));
-  //console.log(tonic, scaleType, scaleLabels);
-
-  return {
-    notes: scaleNotes,
-    labels: scaleLabels
-  }
-}
-
-export function getMajorScaleNotes(tonic: Note) {
-  return whiteKeys.map(interval => getNoteFromInterval(tonic, interval))
-
-}
-
-export function getMajorScale(tonic: Note) {
-  const scaleNotes = getMajorScaleNotes(tonic);
-  const scaleLabels = scaleNotes.map(n => getNoteLabel(tonic, n, TONALITY.MAJOR));
-
-  return {
-    notes: scaleNotes,
-    labels: scaleLabels
-  }
-}
-
-export function getMinorNaturalScaleNotes(tonic: Note): Note[] {
-  // just use the relative major
-  const relativeMajorTonic = ((tonic + 3) % 12) as Note;
-  const relativeMajorNotes = getMajorScaleNotes(relativeMajorTonic);
-  const relativeMinorNotes = wrapArray(relativeMajorNotes, 5);
-  return relativeMinorNotes;
-}
-
-
-export function getMinorNaturalScale(tonic: Note) {
-  const scaleNotes = getMinorNaturalScaleNotes(tonic);
-  //const scaleLabels = scaleNotes.map(n => getNoteLabel(tonic, n, TONALITY.MINOR_NATURAL));
-  const shiftedNotes = shiftNote0When0NotTonic(scaleNotes);
-  const scaleLabels = shiftedNotes.map(n => getNoteLabel(tonic, n, TONALITY.MINOR_NATURAL));
-
-  return {
-    notes: scaleNotes,
-    labels: scaleLabels
-  }
-}
-
-export function getMinorHarmonicScaleNotes(tonic: Note): Note[] {
-  // just raise the 7th of the natural minor
-  const scaleNotes = getMinorNaturalScaleNotes(tonic);
-  scaleNotes[6] = (scaleNotes[6] + 1) % 12 as Note;
-  return scaleNotes;
-}
-
-
-export function getMinorHarmonicScale(tonic: Note) {
-  const scaleNotes = getMinorHarmonicScaleNotes(tonic);
-  const shiftedNotes = shiftNote0When0NotTonic(scaleNotes);
-  const scaleLabels = shiftedNotes.map(n => getNoteLabel(tonic, n, TONALITY.MINOR_HARMONIC));
-
-  return {
-    notes: scaleNotes,
-    labels: scaleLabels
-  }
-}
-
-export function getMinorMelodicScaleNotes(tonic: Note): Note[] {
-  // just lower the 3rd of the tonic major
-  const scaleNotes = getMajorScaleNotes(tonic);
-  scaleNotes[2] = (scaleNotes[2] + 11) % 12 as Note;
-
-  return scaleNotes;
-}
-
-
-export function getMinorMelodicScale(tonic: Note) {
-  const scaleNotes = getMinorMelodicScaleNotes(tonic);
-  const scaleLabels = scaleNotes.map(n => getNoteLabel(tonic, n, TONALITY.MINOR_MELODIC));
-
-  return {
-    notes: scaleNotes,
-    labels: scaleLabels
-  }
-}
-
-export function shiftNote0When0NotTonic(arr) {
-  const zeroIndex = arr.findIndex((value, index) => value === 0 && index !== 0);
-  if (zeroIndex > -1) {
-    const newArr = arr.map((value, index) => index === zeroIndex ? value + 12 : value);
-    return newArr;
-  }
-
-  return arr
-}
-
-export function getScale(tonic: Note, tonality: TONALITY): Sequence {
-  const ret = tonalityUtilsMap['scaleFunction'][tonality](tonic);
-  return ret;
 }
 
 export function getNoteFromInterval(lower: Note, interval: number) {
@@ -652,244 +372,4 @@ export function throttle(mainFunction: (...args: any[]) => any, delay: number) {
       }, delay);
     }
   };
-}
-
-export function leadingDebounce(func: Function, delay: number) {
-  let timeout: number | null;
-  return function(...args: any[]) {
-    const callNow = !timeout;
-    clearTimeout(timeout as number);
-    timeout = setTimeout(() => {
-      timeout = null;
-    }, delay);
-    // @ts-ignore
-    if (callNow) func.apply(this, args);
-  };
-}
-
-
-
-// class KeySignature {
-//   private readonly tonic: Note;
-//   private readonly mode: TONALITY;
-//   private accidentals = new Map<PitchClass, Accidental>();
-//
-//   constructor(tonic: Note, mode: TONALITY) {
-//     this.tonic = tonic;
-//     this.mode = mode;
-//     this.calculateAccidentals();
-//   }
-//
-//   private calculateAccidentals() {
-//     const keyIndex = CIRCLE_OF_FIFTHS.indexOf(this.getKeyName());
-//     const numAccidentals = Math.abs(keyIndex - 11); // Adjust for circle position
-//     
-//     if (keyIndex <= 11) { // Sharps
-//       SHARPS_ORDER.slice(0, numAccidentals).forEach(pc => 
-//         this.accidentals.set(pc, '♯'));
-//     } else { // Flats
-//       FLATS_ORDER.slice(0, numAccidentals).forEach(pc => 
-//         this.accidentals.set(pc, '♭'));
-//     }
-//
-//     // Handle minor keys
-//     if (this.mode !== TONALITY.MAJOR) {
-//       this.handleMinorAccidentals();
-//     }
-//   }
-//
-//   private handleMinorAccidentals() {
-//     // Harmonic minor: raised 7th
-//     if (this.mode === TONALITY.MINOR_HARMONIC) {
-//       const leadingTone = (this.tonic + 11) % 12;
-//       const pc = this.getPitchClass(leadingTone as Note);
-//       this.accidentals.set(pc, '♯');
-//     }
-//     
-//     // Melodic minor: raised 6/7 ascending
-//     if (this.mode === TONALITY.MINOR_MELODIC) {
-//       const sixth = (this.tonic +8) % 12;
-//       const seventh = (this.tonic + 11) % 12;
-//       [sixth, seventh].forEach(n => {
-//         const pc = this.getPitchClass(n as Note);
-//         this.accidentals.set(pc, '♯');
-//       });
-//     }
-//   }
-//
-//   getAccidentalFor(note: Note): Accidental | undefined {
-//     const pc = this.getPitchClass(note);
-//     return this.accidentals.get(pc);
-//   }
-//
-//   getPitchClass(note: Note): PitchClass {
-//     // Convert note number to pitch class
-//     return noteLabels[note % 12] as PitchClass;
-//   }
-//
-//   getKeyName(): string {
-//     const basePitch = noteLabels[this.tonic % 12] as PitchClass;
-//     const modeStr = this.mode === TONALITY.MAJOR ? 'Major' : 'Minor';
-//     
-//     if (this.mode === TONALITY.MAJOR) {
-//       return this.getMajorKeyName(basePitch);
-//     }
-//     return this.getMinorKeyName(basePitch);
-//   }
-//
-//   private getMajorKeyName(basePitch: PitchClass): string {
-//     const circleIndex = CIRCLE_OF_FIFTHS.findIndex(key => 
-//       key.replace(/[♯♭]/, '') === basePitch
-//     );
-//     
-//     if (circleIndex > -1) {
-//       const preferredName = CIRCLE_OF_FIFTHS[circleIndex];
-//       const altName = this.getEnharmonicAlternative(basePitch);
-//       
-//       // Prefer name with fewer accidentals
-//       const numAccidentals = Math.min(
-//         circleIndex,
-//         CIRCLE_OF_FIFTHS.length - circleIndex
-//       );
-//       
-//       return numAccidentals <= 6 ? preferredName : altName;
-//     }
-//     
-//     return `${basePitch} Major`;
-//   }
-//
-//   private getMinorKeyName(basePitch: PitchClass): string {
-//     const relativeMajor = (this.tonic + 3) % 12;
-//     const majorKeyName = new KeySignature(
-//       relativeMajor as Note, 
-//       TONALITY.MAJOR
-//     ).getKeyName().replace(' Major', '');
-//     
-//     return `${basePitch} Minor (rel. ${majorKeyName})`;
-//   }
-//
-//   private getEnharmonicAlternative(pitch: PitchClass): string {
-//     const altPitch = ENHARMONIC_EQUIVALENTS[pitch]?.['♭'] || pitch;
-//     const hasFlats = CIRCLE_OF_FIFTHS.some(key => key.includes('♭'));
-//     
-//     return hasFlats 
-//       ? `${altPitch}${accidental.FLAT}` 
-//       : `${pitch}${accidental.SHARP}`;
-//   }
-// }
-
-class EnharmonicHelper {
-  private static ENHARMONIC_EQUIVALENTS: Record<PitchClass, Record<Accidental, string>> = {
-    'C': { 
-      '♯': 'B♯', 
-      '♭': 'D♭', 
-      '𝄪': 'B𝄪', 
-      '𝄫': 'D𝄫', 
-      '♮': 'C' 
-    },
-    'D': { 
-      '♯': 'C𝄪', 
-      '♭': 'E♭', 
-      '𝄪': 'C𝄪', 
-      '𝄫': 'E𝄫', 
-      '♮': 'D' 
-    },
-    'E': { 
-      '♯': 'D𝄪', 
-      '♭': 'F♭', 
-      '𝄪': 'D𝄪', 
-      '𝄫': 'F𝄫', 
-      '♮': 'E' 
-    },
-    'F': { 
-      '♯': 'E♯', 
-      '♭': 'G♭', 
-      '𝄪': 'E𝄪', 
-      '𝄫': 'G𝄫', 
-      '♮': 'F' 
-    },
-    'G': { 
-      '♯': 'F𝄪', 
-      '♭': 'A♭', 
-      '𝄪': 'F𝄪', 
-      '𝄫': 'A𝄫', 
-      '♮': 'G' 
-    },
-    'A': { 
-      '♯': 'G𝄪', 
-      '♭': 'B♭', 
-      '𝄪': 'G𝄪', 
-      '𝄫': 'B𝄫', 
-      '♮': 'A' 
-    },
-    'B': { 
-      '♯': 'A𝄪', 
-      '♭': 'C♭', 
-      '𝄪': 'A𝄪', 
-      '𝄫': 'C𝄫', 
-      '♮': 'B' 
-    }
-  }
-
-  static getPreferredEnharmonic(
-    note: Note, 
-    context: KeySignature
-  ): string {
-    const accidental = context.getAccidentalFor(note);
-    const pc = context.getPitchClass(note);
-    
-    // Get spelling based on key context
-    if (accidental) {
-      return `${pc}${accidental}`;
-    }
-    
-    // Default to natural
-    return `${pc}♮`;
-  }
-
-  static getAllEnharmonics(note: Note): string[] {
-    const enharmonics: string[] = [];
-    const naturalNotes: Record<PitchClass, number> = {
-      'C': 0,
-      'D': 2,
-      'E': 4,
-      'F': 5,
-      'G': 7,
-      'A': 9,
-      'B': 11
-    };
-
-    const accidentals: Accidental[] = ['♮', '♯', '♭', '𝄪', '𝄫'];
-
-    (Object.keys(naturalNotes) as PitchClass[]).forEach((pitchClass) => {
-      const natural = naturalNotes[pitchClass];
-      accidentals.forEach((accidental) => {
-        let offset = 0;
-        switch (accidental) {
-          case '♯':
-            offset = 1;
-          break;
-          case '♭':
-            offset = -1;
-          break;
-          case '𝄪':
-            offset = 2;
-          break;
-          case '𝄫':
-            offset = -2;
-          break;
-          case '♮':
-            offset = 0;
-          break;
-        }
-        const adjusted = (natural + offset + 12) % 12; // +12 to avoid negative modulo
-        if (adjusted === note) {
-          const spelling = accidental === '♮' ? pitchClass : `${pitchClass}${accidental}`;
-          enharmonics.push(spelling);
-        }
-      });
-    });
-
-    return enharmonics;
-  }
 }

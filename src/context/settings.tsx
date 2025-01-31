@@ -12,6 +12,7 @@ interface Settings {
   setTonic: (arg: Note) => void;
   increaseOctaves: () => void;
   decreaseOctaves: () => void;
+  setShowIvoryLabels: (arg: boolean) => void;
 }
 
 const initialSettingsState: Settings = {
@@ -24,6 +25,7 @@ const initialSettingsState: Settings = {
   setTonic: () => {},
   increaseOctaves: () => {},
   decreaseOctaves: () => {},
+  setShowIvoryLabels: () => {}
 }
 
 export const SettingsContext = createContext<Settings>(initialSettingsState);
@@ -74,6 +76,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   return (
     <SettingsContext.Provider value={{
         showIvoryLabels,
+        setShowIvoryLabels,
         onlyInKey,
         octaves,
         tonality,

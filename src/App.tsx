@@ -19,8 +19,6 @@ function App() {
   const { keySignatures, keySignature, setChosenKeySigIdx } = useContext(NotesContext);
   const { playNotes } = useContext(AudioReactContext);
   const $mainRef = useRef<HTMLElement>(null);
-  const enharmonicEquivTonics = keySignatures.map(ks => {return ks.tonic})
-  console.log(keySignatures, enharmonicEquivTonics);
 
   function keyboardOverflowHandler() {
     if ($mainRef.current) {
@@ -73,6 +71,11 @@ function App() {
             ))}
           </select>
           <KeySignature />
+        </section>
+        <section className='enharmonic-key-selector'>
+          {keySignatures.length > 1 ? keySignatures.map((kS, i) => {
+            return <button onClick={() => {setChosenKeySigIdx(i)}}>{kS.scaleAscending.labels[0]}</button>
+          }) : null}
         </section>
         <main ref={$mainRef}>
           <Keyboard />

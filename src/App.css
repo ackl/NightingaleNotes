@@ -256,3 +256,7 @@ b {
   50% { background-color: goldenrod; }
   100% { background-color: gold; }
 }
+
+.enharmonic-key-selector {
+  position: relative;
+}

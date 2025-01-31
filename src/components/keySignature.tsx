@@ -1,10 +1,9 @@
 import { useEffect, useContext } from 'react'
 import { SettingsContext, NotesContext } from '../context';
-import { Note, TONALITY, getMajorKeyLabel } from '../lib'
+import { Note, TONALITY } from '../lib'
 import abcjs from 'abcjs';
 
 export function KeySignature() {
-  const { tonic, tonality } = useContext(SettingsContext);
   const { keySignature } = useContext(NotesContext);
 
   useEffect(() => {
@@ -12,11 +11,6 @@ export function KeySignature() {
     key = key.replace('♭', 'b');
     key = key.replace('♯', '#');
     console.log('trying to render key: ', key);
-    //let notes = '';
-
-    //if (chord) {
-      //notes = `[${chord.labels.join('')}]`;
-    //}
 
     abcjs.renderAbc('paper', `X:1\nK:${key}\n|\n`);
 

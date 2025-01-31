@@ -3,7 +3,7 @@ import { useEffect, useContext, useCallback, createContext } from 'react'
 import { SettingsContext } from './settings'
 import { AudioReactContext } from './audio'
 import { NotesContext } from './notes'
-import { Note, TONALITY, } from '../lib';
+import { Note, TONALITY } from '../lib';
 
 export const A11yContext = createContext<null>(null);
 
@@ -14,7 +14,9 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
     tonic,
     setTonic,
     increaseOctaves,
-    decreaseOctaves
+    decreaseOctaves,
+    showIvoryLabels,
+    setShowIvoryLabels
   } = useContext(SettingsContext);
 
   const {
@@ -34,7 +36,7 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
     * ev.code will be like Digit1 Digit2 etc based on which
     * digit key they pressed, so we just take the number and
     * typecast it */
-    const noteInScale = (parseInt(ev.code[5]) -1) as Note
+    const noteInScale = (parseInt(ev.code[5]) - 1) as Note
     if (diatonicChordRoot === noteInScale) {
       setDiatonicChordRoot(undefined);
     } else {
@@ -59,6 +61,10 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [tonic, setTonic, tonality, setTonality]);
 
+  const handleShowLabels = useCallback(() => {
+    setShowIvoryLabels(!showIvoryLabels)
+  }, [showIvoryLabels, setShowIvoryLabels])
+
   const keypressCallback = useCallback((ev: KeyboardEvent) => {
     let newTonic: Note;
 
@@ -76,6 +82,9 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
       case "ArrowDown":
         newTonic = (tonic + 1) % 12 as Note
         setTonic(newTonic)
+        break;
+      case "KeyS":
+        handleShowLabels();
         break;
       case "KeyH":
       case "ArrowLeft":

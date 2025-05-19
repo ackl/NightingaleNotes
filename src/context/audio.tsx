@@ -1,7 +1,13 @@
 import type { ReactNode } from "react";
-import { useState, useEffect, createContext, useContext, useCallback } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { SettingsContext } from "./settings";
-import { Note } from "../lib";
+import { Note, Sequence } from "../lib";
 
 declare global {
   interface Window {
@@ -19,17 +25,18 @@ interface AudioContextState {
 
 const initialAudioContextState: AudioContextState = {
   audioContext: null,
-  playSequence: () => {},
-  playChord: () => {},
-  playTone: () => {},
-  playNotes: () => {},
+  playSequence: () => { },
+  playChord: () => { },
+  playTone: () => { },
+  playNotes: () => { },
 };
 
 export const AudioReactContext = createContext<AudioContextState>(
-  initialAudioContextState
+  initialAudioContextState,
 );
 
 // have samples per minor third
+// can't just use one sample and pitch shift it cos we need the overtones to match (approx).
 // 0  3   6   9
 // C  D#  F#  A
 
@@ -54,31 +61,12 @@ function getSampleForNote(note: number) {
   };
 }
 
-const sampleFilenames = [
-  "C2",
-  "Ds2",
-  "Fs2",
-  "A2",
-  "C3",
-  "Ds3",
-  "Fs3",
-  "A3",
-  "C4",
-  "Ds4",
-  "Fs4",
-  "A4",
-  "C5",
-  "Ds5",
-  "Fs5",
-  "A5",
-  "C6",
-  "Ds6",
-  "Fs6",
-  "A6",
-] as const;
+const sampleFilenames = [ "C2", "Ds2", "Fs2",
+  "A2", "C3", "Ds3", "Fs3", "A3", "C4", "Ds4",
+  "Fs4", "A4", "C5", "Ds5", "Fs5", "A5", "C6",
+  "Ds6", "Fs6", "A6", ] as const;
 
 type SampleName = typeof sampleFilenames[number];
-
 type ArrayBuffers = Partial<Record<SampleName, ArrayBuffer>>;
 type AudioBuffers = Record<SampleName, AudioBuffer>;
 
@@ -101,7 +89,7 @@ class BufferLoader {
     const responses = await Promise.all(
       sampleFilenames.map(async (x) =>
         fetch(`/${x}v8.mp3`).then((res) => res.arrayBuffer())
-      )
+      ),
     );
 
     responses.forEach((res, i) => {
@@ -123,14 +111,16 @@ class BufferLoader {
 }
 
 export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
-  const [ audioContext, setAudioContext ] = useState<AudioContext | null>(null);
-  const [ init, setInit] = useState(false);
-  const [ bufferLoader, setBufferLoader ] = useState<BufferLoader>();
-  const [ activeSources, setActiveSources ] = useState<AudioBufferSourceNode[]>([]);
+  const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
+  const [init, setInit] = useState(false);
+  const [bufferLoader, setBufferLoader] = useState<BufferLoader>();
+  const [activeSources, setActiveSources] = useState<AudioBufferSourceNode[]>(
+    [],
+  );
   const { octaves } = useContext(SettingsContext);
 
   function stopAllSources() {
-    activeSources.forEach(source => {
+    activeSources.forEach((source) => {
       try {
         source.stop();
       } catch (e) {
@@ -155,7 +145,7 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
   function playTone(noteValue: number, when = 0) {
     if (audioContext && bufferLoader?.audioBuffers) {
       const source = audioContext.createBufferSource();
-      setActiveSources(prev => [...prev, source]);
+      setActiveSources((prev) => [...prev, source]);
       const gainNode = audioContext.createGain();
       gainNode.gain.value = 1;
 
@@ -180,8 +170,7 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-
-  function generateSequenceNotes(sequence) {
+  function generateSequenceNotes(sequence: Sequence) {
     const max = Math.max(...sequence.notes);
     const maxIdx = sequence.notes.indexOf(max as Note);
 
@@ -192,7 +181,7 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     const lower = sequence.notes.slice(0, maxIdx + 1);
 
     //const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12);
-    const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12); 
+    const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12);
 
     // since we build notes of a heptatonic add back the octave
     const sequenceNotes = [...lower, ...upper, lower[0] + 12];
@@ -200,20 +189,19 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
   }
 
   const buildWholeSequence = useCallback((sequence: Sequence) => {
-      let sequenceNotes = generateSequenceNotes(sequence);
-      for (let i = 2; i < octaves; i++) {
-        const nextOctave: number[] = [];
-        for (let j = 0; j < 8; j++) {
-          nextOctave.push((sequenceNotes[j] + (12 * (i - 1))))
-        }
-        sequenceNotes = Array.from(new Set([...sequenceNotes, ...nextOctave]))
+    let sequenceNotes = generateSequenceNotes(sequence);
+    for (let i = 2; i < octaves; i++) {
+      const nextOctave: number[] = [];
+      for (let j = 0; j < 8; j++) {
+        nextOctave.push(sequenceNotes[j] + (12 * (i - 1)));
       }
+      sequenceNotes = Array.from(new Set([...sequenceNotes, ...nextOctave]));
+    }
 
-      return sequenceNotes;
+    return sequenceNotes;
   }, [octaves]);
 
   function playNotes(sequence: Sequence) {
-
     if (!audioContext) {
       setTimeout(() => {
         const clickEvent = new MouseEvent("click", {
@@ -228,7 +216,6 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
       }, 1);
     } else {
       if (sequence) {
-
         const sequenceNotes = buildWholeSequence(sequence);
 
         sequenceNotes.length > 7

@@ -1,8 +1,9 @@
 body {
-  font-family: "Montserrat", sans-serif;
+  font-family: "Noto Sans", sans-serif;
   font-optical-sizing: auto;
-  font-weight: <weight>;
+  font-weight: 400;
   font-style: normal;
+  font-variation-settings: "width" 100;
 }
 
 #root {
@@ -137,10 +138,24 @@ button {
   margin-right: 1em;
   margin-bottom: 4px;
   outline: 0;
+  border: 1px solid lightblue;
+  border-radius: 8px;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  transition: border-color 0.25s;
 }
 
+button:hover {
+  border-color: black;
+}
+
+
 button.play {
-  border-color: #85d785;
+  border-color: lightblue;
 }
 
 /*active button*/

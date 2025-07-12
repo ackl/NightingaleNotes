@@ -113,7 +113,7 @@ export const A11yProvider = ({ children }: { children: ReactNode }) => {
         decreaseOctaves();
         break;
     }
-  }, [chord, keySignature, tonic, setTonic, increaseOctaves, decreaseOctaves, goToRelative, handleTonality, handleTriad, playNotes]);
+  }, [chord, keySignature, tonic, setTonic, increaseOctaves, decreaseOctaves, goToRelative, handleTonality, handleTriad, playNotes, handleShowLabels]);
 
   useEffect(() => {
     document.addEventListener('keydown', keypressCallback);

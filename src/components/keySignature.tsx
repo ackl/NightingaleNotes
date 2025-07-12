@@ -1,6 +1,6 @@
 import { useEffect, useContext } from 'react'
-import { SettingsContext, NotesContext } from '../context';
-import { Note, TONALITY } from '../lib'
+import { NotesContext } from '../context';
+import { TONALITY } from '../lib'
 import abcjs from 'abcjs';
 
 export function KeySignature() {

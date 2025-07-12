@@ -5,8 +5,7 @@ import {
   getMajorKeyLabel,
   getMinorKeyLabel,
   throttle,
-  Note,
-  Sequence
+  Note
 } from './lib';
 import './App.css'
 import { NotesContext, SettingsContext, AudioReactContext } from './context'
@@ -77,6 +76,9 @@ function App() {
             return <button onClick={() => {setChosenKeySigIdx(i)}}>{kS.scaleAscending.labels[0]}</button>
           }) : null}
         </section>
+        <div className="orientation-hint">
+          <p>🔄 For the best piano experience, try rotating your device to landscape mode</p>
+        </div>
         <main ref={$mainRef}>
           <Keyboard />
         </main>

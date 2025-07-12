@@ -2,12 +2,14 @@ import { memo, useContext, useMemo } from "react";
 import { NotesContext, SettingsContext, AudioReactContext } from "../context";
 import { whiteKeys } from "../lib";
 import type { Note } from "../lib";
+import { useHaptic } from "use-haptic";
 
-export const Ivory = function Ivory({ note, octave }: { note: Note; octave: number }) {
+export const Ivory = memo(function Ivory({ note, octave }: { note: Note; octave: number }) {
   const isWhiteKey = useMemo(() => whiteKeys.includes(note), [note]);
-  const { tonic, showIvoryLabels, onlyInKey, tonality, octaves } = useContext(SettingsContext);
+  const { tonic, showIvoryLabels, onlyInKey, octaves } = useContext(SettingsContext);
   const { chord, keySignature: { scaleAscending: scale } } = useContext(NotesContext);
   const { playTone } = useContext(AudioReactContext);
+  const { triggerHaptic } = useHaptic();
 
   const isFirstOctave = octave === 0;
   const isLastOctave = octave === octaves - 1;
@@ -43,6 +45,8 @@ export const Ivory = function Ivory({ note, octave }: { note: Note; octave: numb
         ${tonic === note ? "ivory--tonic" : ""}
         `}
       onClick={() => {
+        // Haptic feedback for mobile devices including iOS Safari
+        triggerHaptic();
         playTone(note + octave * 12);
       }}
     >
@@ -51,4 +55,4 @@ export const Ivory = function Ivory({ note, octave }: { note: Note; octave: numb
       </span>
     </div>
   );
-}
+});

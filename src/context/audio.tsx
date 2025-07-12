@@ -22,6 +22,8 @@ interface AudioContextState {
   playChord: (n: number[]) => void;
   playTone: (n: number) => void;
   playNotes: (s: Sequence) => void;
+  audioReady: boolean;
+  audioStatus: string;
 }
 
 const initialAudioContextState: AudioContextState = {
@@ -30,6 +32,8 @@ const initialAudioContextState: AudioContextState = {
   playChord: () => { },
   playTone: () => { },
   playNotes: () => { },
+  audioReady: false,
+  audioStatus: 'initializing',
 };
 
 export const AudioReactContext = createContext<AudioContextState>(
@@ -98,8 +102,6 @@ class BufferLoader {
       !this.fetched.has(sample) && !this.currentlyFetching.has(sample)
     );
     
-    console.log("[Audio Debug] fetchSamples called with:", samples);
-    console.log("[Audio Debug] samples to fetch:", toFetch);
     
     if (toFetch.length === 0) return;
 
@@ -109,22 +111,18 @@ class BufferLoader {
     try {
       const responses = await Promise.all(
         toFetch.map(async (sample) => {
-          console.log("[Audio Debug] Fetching sample:", `/${sample}v8.mp3`);
           const response = await fetch(`/${sample}v8.mp3`);
-          console.log("[Audio Debug] Fetch response for", sample, ":", response.status, response.ok);
           return response.arrayBuffer();
         }),
       );
 
       responses.forEach((res, i) => {
         const sample = toFetch[i];
-        console.log("[Audio Debug] Received arrayBuffer for", sample, "size:", res.byteLength);
         this.arrayBuffers[sample] = res;
         this.fetched.add(sample);
         this.currentlyFetching.delete(sample);
       });
     } catch (error) {
-      console.error("[Audio Debug] Error fetching samples:", error);
       // Remove from fetching set on error
       toFetch.forEach(sample => this.currentlyFetching.delete(sample));
       throw error;
@@ -145,19 +143,16 @@ class BufferLoader {
   }
 
   loadIntoContext(ctx: AudioContext) {
-    console.log("[Audio Debug] loadIntoContext called");
     if (!this.audioBuffers) {
       this.audioBuffers = {} as AudioBuffers;
     }
 
     Object.entries(this.arrayBuffers).forEach(([note, arrayBuf]) => {
       if (!this.audioBuffers![note as SampleName]) {
-        console.log("[Audio Debug] Decoding audio data for:", note);
         ctx.decodeAudioData(arrayBuf).then((sample) => {
-          console.log("[Audio Debug] Successfully decoded audio data for:", note);
           this.audioBuffers![note as SampleName] = sample;
         }).catch((error) => {
-          console.error(`[Audio Debug] Failed to decode audio data for ${note}:`, error);
+          console.error(`Failed to decode audio data for ${note}:`, error);
         });
       }
     });
@@ -176,7 +171,41 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
   const [activeSources, setActiveSources] = useState<AudioBufferSourceNode[]>(
     [],
   );
+  const [audioReady, setAudioReady] = useState(false);
+  const [audioStatus, setAudioStatus] = useState('initializing');
   const { octaves } = useContext(SettingsContext);
+
+  // Minimal iOS Safari unlock function
+  function unlockAudioContext(audioCtx: AudioContext) {
+    if (audioCtx.state !== 'suspended') {
+      setAudioReady(true);
+      setAudioStatus('ready');
+      return;
+    }
+    
+    const unlock = () => {
+      audioCtx.resume().then(() => {
+        // Play silent buffer to truly unlock iOS Safari
+        const buffer = audioCtx.createBuffer(1, 1, 22050);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+        
+        setAudioReady(true);
+        setAudioStatus('ready');
+        
+        // Clean up
+        ['touchstart', 'click'].forEach(e => 
+          document.body.removeEventListener(e, unlock)
+        );
+      });
+    };
+    
+    ['touchstart', 'click'].forEach(e => 
+      document.body.addEventListener(e, unlock, { once: false })
+    );
+  }
 
   function stopAllSources() {
     activeSources.forEach((source) => {
@@ -202,46 +231,36 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
   }
 
   async function playTone(noteValue: number, when = 0) {
-    console.log("[Audio Debug] playTone called with noteValue:", noteValue, "when:", when);
-    console.log("[Audio Debug] audioContext:", audioContext);
-    console.log("[Audio Debug] audioContext state:", audioContext?.state);
-    console.log("[Audio Debug] bufferLoader:", bufferLoader);
+    if (!audioContext) return;
 
-    if (!audioContext) {
-      console.error("[Audio Debug] No audioContext available");
-      return;
-    }
-
-    // Ensure AudioContext is resumed for iOS Safari
-    if (audioContext?.state === 'suspended') {
-      console.log("[Audio Debug] AudioContext suspended in playTone, attempting to resume...");
+    // Ensure AudioContext is running (iOS Safari requirement)
+    if (audioContext.state !== 'running') {
       try {
         await audioContext.resume();
-        console.log("[Audio Debug] AudioContext resumed in playTone, new state:", audioContext.state);
+        if (audioContext.state === 'running') {
+          setAudioReady(true);
+          setAudioStatus('ready');
+        }
       } catch (error) {
-        console.error("[Audio Debug] Failed to resume AudioContext in playTone:", error);
         return;
       }
     }
 
+    if (audioContext.state !== 'running') return;
+
     const sampleInfo = getSampleForNote(noteValue);
-    console.log("[Audio Debug] Sample info:", sampleInfo);
     
     // Check if sample is ready, if not, try to load it
     if (!bufferLoader?.isSampleReady(sampleInfo.sample)) {
-      console.log("[Audio Debug] Sample not ready, fetching:", sampleInfo.sample);
       bufferLoader?.fetchSamples([sampleInfo.sample]).then(() => {
-        console.log("[Audio Debug] Sample fetched, loading into context");
         if (audioContext && bufferLoader?.audioBuffers) {
           bufferLoader.loadIntoContext(audioContext);
-          // Retry playing after a short delay
           setTimeout(() => playTone(noteValue, when), 50);
         }
       });
       return;
     }
 
-    console.log("[Audio Debug] Sample ready, attempting to play");
     if (audioContext && bufferLoader?.audioBuffers) {
       const source = audioContext.createBufferSource();
       setActiveSources((prev) => [...prev, source]);
@@ -249,24 +268,16 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
       gainNode.gain.value = 1;
 
       const audioBuffer = bufferLoader.audioBuffers[sampleInfo.sample];
-      console.log("[Audio Debug] Audio buffer:", audioBuffer);
-      
-      if (!audioBuffer) {
-        console.error("[Audio Debug] No audio buffer found for sample:", sampleInfo.sample);
-        return;
-      }
+      if (!audioBuffer) return;
 
       source.buffer = audioBuffer;
       source.detune.value = sampleInfo.detune * 100;
-      console.log("[Audio Debug] Source configured with detune:", sampleInfo.detune * 100);
       
-      // Clean up source after it finishes
       source.onended = () => {
-        console.log("[Audio Debug] Audio source ended");
         setActiveSources((prev) => prev.filter(s => s !== source));
       };
 
-      // Sanitize noteValue for DOM query
+      // Visual feedback
       const safeNoteValue = Math.max(0, Math.min(127, noteValue));
       const $el = document.querySelector(`.ivory--${safeNoteValue}`);
       setTimeout(() => {
@@ -278,13 +289,11 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
 
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      console.log("[Audio Debug] About to start audio source at time:", audioContext.currentTime + when);
       
       try {
         source.start(audioContext.currentTime + when);
-        console.log("[Audio Debug] Audio source started successfully");
       } catch (error) {
-        console.error("[Audio Debug] Failed to start audio source:", error);
+        // Ignore start errors
       }
     }
   }
@@ -328,7 +337,6 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
           cancelable: true,
           view: window,
         });
-
         setTimeout(() => {
           document.querySelector(".play")?.dispatchEvent(clickEvent);
         }, 100);
@@ -336,7 +344,6 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     } else {
       if (sequence) {
         const sequenceNotes = buildWholeSequence(sequence);
-
         sequenceNotes.length > 7
           ? playSequence(sequenceNotes)
           : playChord(sequenceNotes);
@@ -345,69 +352,53 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
   }
 
   useEffect(() => {
+    let hasUserInteracted = false;
+
     async function createAudioContext() {
-      console.log("[Audio Debug] Creating AudioContext...");
+      if (hasUserInteracted) return;
+      
       try {
-        let ctx: AudioContext;
-        if (typeof AudioContext !== "undefined") {
-          console.log("[Audio Debug] Using AudioContext");
-          ctx = new AudioContext();
-        } else if (typeof window.webkitAudioContext !== "undefined") {
-          console.log("[Audio Debug] Using webkitAudioContext");
-          ctx = new window.webkitAudioContext();
-        } else {
-          console.error("[Audio Debug] Web Audio API is not supported in this browser");
+        // Modern AudioContext creation
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) {
+          setAudioStatus('unsupported');
           return;
         }
-
-        console.log("[Audio Debug] AudioContext created, state:", ctx.state);
-
-        // Store reference globally for iOS Safari workaround
-        (window as any).audioContext = ctx;
-
-        // iOS Safari requires AudioContext to be resumed after user gesture
-        if (ctx.state === 'suspended') {
-          console.log("[Audio Debug] AudioContext suspended, attempting to resume...");
-          await ctx.resume();
-          console.log("[Audio Debug] AudioContext resumed, new state:", ctx.state);
-        }
-
+        
+        const ctx = new AudioContextClass();
+        
+        // Set up iOS Safari unlock
+        unlockAudioContext(ctx);
+        
+        hasUserInteracted = true;
         setAudioContext(ctx);
         setInit(true);
-        console.log("[Audio Debug] AudioContext initialized successfully");
+        setAudioReady(ctx.state === 'running');
+        setAudioStatus(ctx.state === 'running' ? 'ready' : 'waiting for unlock');
+        
+        // Remove event listeners after successful initialization
+        document.removeEventListener("click", createAudioContext);
+        document.removeEventListener("touchend", createAudioContext);
+        document.removeEventListener("touchstart", createAudioContext);
       } catch (error) {
-        console.error("[Audio Debug] Failed to create/resume AudioContext:", error);
-      }
-    }
-
-    // iOS Safari specific workaround
-    function resumeAudioContext() {
-      console.log("[Audio Debug] iOS Safari resume handler triggered");
-      if ((window as any).audioContext && (window as any).audioContext.state === 'suspended') {
-        console.log("[Audio Debug] Resuming suspended AudioContext...");
-        (window as any).audioContext.resume().then(() => {
-          console.log("[Audio Debug] AudioContext resumed via touchend handler");
-        }).catch((error: any) => {
-          console.error("[Audio Debug] Failed to resume AudioContext:", error);
-        });
+        setAudioStatus('error');
+        hasUserInteracted = false; // Allow retry
       }
     }
 
     if (!init) {
-      console.log("[Audio Debug] Adding event listeners for audio initialization");
-      document.addEventListener("click", createAudioContext);
-      document.addEventListener("touchend", createAudioContext);
-      document.addEventListener("touchstart", createAudioContext);
-      
-      // iOS Safari specific workaround
-      document.addEventListener('touchend', resumeAudioContext);
+      setAudioStatus('waiting for user interaction');
+      document.addEventListener("click", createAudioContext, { once: false, capture: true });
+      document.addEventListener("touchend", createAudioContext, { once: false, capture: true });
+      document.addEventListener("touchstart", createAudioContext, { once: false, capture: true });
     }
 
     return () => {
-      document.removeEventListener("click", createAudioContext);
-      document.removeEventListener("touchend", createAudioContext);
-      document.removeEventListener("touchstart", createAudioContext);
-      document.removeEventListener('touchend', resumeAudioContext);
+      if (!hasUserInteracted) {
+        document.removeEventListener("click", createAudioContext, true);
+        document.removeEventListener("touchend", createAudioContext, true);
+        document.removeEventListener("touchstart", createAudioContext, true);
+      }
     };
   }, [init]);
 
@@ -453,6 +444,8 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
           playChord,
           playTone,
           playNotes,
+          audioReady,
+          audioStatus,
         }}
       >
         {children}

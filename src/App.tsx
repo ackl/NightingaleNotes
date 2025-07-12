@@ -51,7 +51,7 @@ function App() {
         <section className='play-button'>
           <button
             className='play'
-            onClick={() => {playNotes(keySignature.scaleAscending)}}
+            onClick={() => playNotes(keySignature.scaleAscending)}
           >►</button>
         </section>
         <section className="key-selector">

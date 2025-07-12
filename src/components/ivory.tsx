@@ -44,10 +44,14 @@ export const Ivory = memo(function Ivory({ note, octave }: { note: Note; octave:
         ${isHighlight ? " in-scale" : ""}
         ${tonic === note ? "ivory--tonic" : ""}
         `}
-      onClick={() => {
-        // Haptic feedback for mobile devices including iOS Safari
+      onClick={async (e) => {
+        e.stopPropagation();
         triggerHaptic();
-        playTone(note + octave * 12);
+        await playTone(note + octave * 12);
+      }}
+      onTouchStart={(e) => {
+        // iOS Safari sometimes needs touchstart to be explicitly handled
+        e.stopPropagation();
       }}
     >
       <span className={`ivory-label ${showIvoryLabels && "show"}`}>

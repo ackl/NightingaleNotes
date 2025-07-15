@@ -1,7 +1,7 @@
-import { SettingsContext, SettingsProvider } from './settings'
-import { NotesContext, NotesProvider } from './notes'
-import { AudioReactContext, AudioReactProvider } from './audio'
-import { A11yContext, A11yProvider } from './a11y'
+import { SettingsContext, SettingsProvider } from './settings';
+import { NotesContext, NotesProvider } from './notes';
+import { AudioReactContext, AudioReactProvider } from './audio';
+import { A11yContext, A11yProvider } from './a11y';
 
 export {
   SettingsContext,
@@ -12,4 +12,4 @@ export {
   AudioReactProvider,
   A11yContext,
   A11yProvider,
-}
+};

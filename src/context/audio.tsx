@@ -1,14 +1,15 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useState,
-} from "react";
-import { SettingsContext } from "./settings";
-import { Note, Sequence } from "../lib";
-import { ErrorBoundary } from "../components/ErrorBoundary";
+  useMemo,
+} from 'react';
+import { SettingsContext } from './settings';
+import { Note, Sequence } from '../lib';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 
 declare global {
   interface Window {
@@ -22,8 +23,6 @@ interface AudioContextState {
   playChord: (n: number[]) => void;
   playTone: (n: number) => void;
   playNotes: (s: Sequence) => void;
-  audioReady: boolean;
-  audioStatus: string;
 }
 
 const initialAudioContextState: AudioContextState = {
@@ -32,8 +31,6 @@ const initialAudioContextState: AudioContextState = {
   playChord: () => { },
   playTone: () => { },
   playNotes: () => { },
-  audioReady: false,
-  audioStatus: 'initializing',
 };
 
 export const AudioReactContext = createContext<AudioContextState>(
@@ -48,13 +45,13 @@ export const AudioReactContext = createContext<AudioContextState>(
 function getSampleForNote(note: number) {
   // first get closest lower sample note label
   const modNote = note % 12;
-  let fileNamePrefix = "A";
+  let fileNamePrefix = 'A';
   if (modNote < 3) {
-    fileNamePrefix = "C";
+    fileNamePrefix = 'C';
   } else if (modNote < 6) {
-    fileNamePrefix = "Ds";
+    fileNamePrefix = 'Ds';
   } else if (modNote < 9) {
-    fileNamePrefix = "Fs";
+    fileNamePrefix = 'Fs';
   }
 
   // append the octave number
@@ -66,20 +63,22 @@ function getSampleForNote(note: number) {
   };
 }
 
-const sampleFilenames = [ "C2", "Ds2", "Fs2",
-  "A2", "C3", "Ds3", "Fs3", "A3", "C4", "Ds4",
-  "Fs4", "A4", "C5", "Ds5", "Fs5", "A5", "C6",
-  "Ds6", "Fs6", "A6", ] as const;
+const sampleFilenames = ['C2', 'Ds2', 'Fs2', 'A2', 'C3', 'Ds3', 'Fs3', 'A3', 'C4',
+  'Ds4', 'Fs4', 'A4', 'C5', 'Ds5', 'Fs5', 'A5', 'C6', 'Ds6', 'Fs6', 'A6'] as const;
 
-type SampleName = typeof sampleFilenames[number];
+type SampleName = (typeof sampleFilenames)[number];
 type ArrayBuffers = Partial<Record<SampleName, ArrayBuffer>>;
 type AudioBuffers = Record<SampleName, AudioBuffer>;
 
 class BufferLoader {
-  filenames: readonly string[];
+  filenames: readonly SampleName[];
+
   arrayBuffers: ArrayBuffers;
+
   audioBuffers: AudioBuffers | null;
+
   fetched: Set<SampleName>;
+
   currentlyFetching: Set<SampleName>;
 
   constructor() {
@@ -92,21 +91,29 @@ class BufferLoader {
 
   // Load essential samples for immediate playback (current octave range)
   async fetchEssentials() {
-    const essentialSamples = ["C3", "Ds3", "Fs3", "A3", "C4", "Ds4", "Fs4", "A4"] as SampleName[];
+    const essentialSamples = [
+      'C3',
+      'Ds3',
+      'Fs3',
+      'A3',
+      'C4',
+      'Ds4',
+      'Fs4',
+      'A4',
+    ] as SampleName[];
     return this.fetchSamples(essentialSamples);
   }
 
   // Load specific samples on demand
   async fetchSamples(samples: SampleName[]) {
-    const toFetch = samples.filter(sample => 
-      !this.fetched.has(sample) && !this.currentlyFetching.has(sample)
+    const toFetch = samples.filter(
+      (sample) => !this.fetched.has(sample) && !this.currentlyFetching.has(sample),
     );
-    
-    
+
     if (toFetch.length === 0) return;
 
     // Mark as currently fetching
-    toFetch.forEach(sample => this.currentlyFetching.add(sample));
+    toFetch.forEach((sample) => this.currentlyFetching.add(sample));
 
     try {
       const responses = await Promise.all(
@@ -124,15 +131,15 @@ class BufferLoader {
       });
     } catch (error) {
       // Remove from fetching set on error
-      toFetch.forEach(sample => this.currentlyFetching.delete(sample));
+      toFetch.forEach((sample) => this.currentlyFetching.delete(sample));
       throw error;
     }
   }
 
   // Get samples needed for a specific octave range
   getSamplesForOctaveRange(minOctave: number, maxOctave: number): SampleName[] {
-    return sampleFilenames.filter(sample => {
-      const octave = parseInt(sample.slice(-1));
+    return this.filenames.filter((sample) => {
+      const octave = parseInt(sample.slice(-1), 10);
       return octave >= minOctave && octave <= maxOctave;
     });
   }
@@ -149,11 +156,14 @@ class BufferLoader {
 
     Object.entries(this.arrayBuffers).forEach(([note, arrayBuf]) => {
       if (!this.audioBuffers![note as SampleName]) {
-        ctx.decodeAudioData(arrayBuf).then((sample) => {
-          this.audioBuffers![note as SampleName] = sample;
-        }).catch((error) => {
-          console.error(`Failed to decode audio data for ${note}:`, error);
-        });
+        ctx
+          .decodeAudioData(arrayBuf)
+          .then((sample) => {
+            this.audioBuffers![note as SampleName] = sample;
+          })
+          .catch((error) => {
+            console.error(`Failed to decode audio data for ${note}:`, error);
+          });
       }
     });
   }
@@ -164,25 +174,19 @@ class BufferLoader {
   }
 }
 
-export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
+export function AudioReactProvider({ children }: { children: ReactNode }) {
   const [audioContext, setAudioContext] = useState<AudioContext | null>(null);
   const [init, setInit] = useState(false);
   const [bufferLoader, setBufferLoader] = useState<BufferLoader>();
-  const [activeSources, setActiveSources] = useState<AudioBufferSourceNode[]>(
-    [],
-  );
-  const [audioReady, setAudioReady] = useState(false);
-  const [audioStatus, setAudioStatus] = useState('initializing');
+  const [activeSources, setActiveSources] = useState<AudioBufferSourceNode[]>([]);
   const { octaves } = useContext(SettingsContext);
 
   // Minimal iOS Safari unlock function
   function unlockAudioContext(audioCtx: AudioContext) {
     if (audioCtx.state !== 'suspended') {
-      setAudioReady(true);
-      setAudioStatus('ready');
       return;
     }
-    
+
     const unlock = () => {
       audioCtx.resume().then(() => {
         // Play silent buffer to truly unlock iOS Safari
@@ -191,20 +195,14 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
         source.buffer = buffer;
         source.connect(audioCtx.destination);
         source.start(0);
-        
-        setAudioReady(true);
-        setAudioStatus('ready');
-        
+
         // Clean up
-        ['touchstart', 'click'].forEach(e => 
-          document.body.removeEventListener(e, unlock)
-        );
+        ['touchstart', 'click'].forEach((e) => document.body.removeEventListener(e, unlock));
       });
     };
-    
-    ['touchstart', 'click'].forEach(e => 
-      document.body.addEventListener(e, unlock, { once: false })
-    );
+
+    ['touchstart', 'click']
+      .forEach((e) => document.body.addEventListener(e, unlock, { once: false }));
   }
 
   function stopAllSources() {
@@ -218,29 +216,13 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     setActiveSources([]);
   }
 
-  function playSequence(notes: number[]) {
-    stopAllSources();
-    notes.forEach((n, i) => {
-      playTone(n, i / 4);
-    });
-  }
-
-  function playChord(notes: number[]) {
-    stopAllSources();
-    notes.forEach((n) => playTone(n, 0));
-  }
-
-  async function playTone(noteValue: number, when = 0) {
+  const playTone = useCallback(async (noteValue: number, when = 0) => {
     if (!audioContext) return;
 
     // Ensure AudioContext is running (iOS Safari requirement)
     if (audioContext.state !== 'running') {
       try {
         await audioContext.resume();
-        if (audioContext.state === 'running') {
-          setAudioReady(true);
-          setAudioStatus('ready');
-        }
       } catch (error) {
         return;
       }
@@ -249,7 +231,7 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     if (audioContext.state !== 'running') return;
 
     const sampleInfo = getSampleForNote(noteValue);
-    
+
     // Check if sample is ready, if not, try to load it
     if (!bufferLoader?.isSampleReady(sampleInfo.sample)) {
       bufferLoader?.fetchSamples([sampleInfo.sample]).then(() => {
@@ -272,31 +254,41 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
 
       source.buffer = audioBuffer;
       source.detune.value = sampleInfo.detune * 100;
-      
+
       source.onended = () => {
-        setActiveSources((prev) => prev.filter(s => s !== source));
+        setActiveSources((prev) => prev.filter((s) => s !== source));
       };
 
       // Visual feedback
       const safeNoteValue = Math.max(0, Math.min(127, noteValue));
       const $el = document.querySelector(`.ivory--${safeNoteValue}`);
       setTimeout(() => {
-        $el?.classList.add("flash");
-        setTimeout(function () {
-          $el?.classList.remove("flash");
+        $el?.classList.add('flash');
+        setTimeout(() => {
+          $el?.classList.remove('flash');
         }, 600);
       }, when * 1000);
 
       source.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      
+
       try {
         source.start(audioContext.currentTime + when);
       } catch (error) {
         // Ignore start errors
       }
     }
-  }
+  }, [audioContext, bufferLoader]);
+
+  const playSequence = useCallback((notes: number[]) => {
+    notes.forEach((n, i) => {
+      playTone(n, i / 4);
+    });
+  }, [playTone]);
+
+  const playChord = useCallback((notes: number[]) => {
+    notes.forEach((n) => playTone(n, 0));
+  }, [playTone]);
 
   function generateSequenceNotes(sequence: Sequence) {
     const max = Math.max(...sequence.notes);
@@ -308,7 +300,7 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     // to determine how to detune the A440 sample
     const lower = sequence.notes.slice(0, maxIdx + 1);
 
-    //const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12);
+    // const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12);
     const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12);
 
     // since we build notes of a heptatonic add back the octave
@@ -316,88 +308,101 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     return sequenceNotes;
   }
 
-  const buildWholeSequence = useCallback((sequence: Sequence) => {
-    let sequenceNotes = generateSequenceNotes(sequence);
-    for (let i = 2; i < octaves; i++) {
-      const nextOctave: number[] = [];
-      for (let j = 0; j < 8; j++) {
-        nextOctave.push(sequenceNotes[j] + (12 * (i - 1)));
+  const buildWholeSequence = useCallback(
+    (sequence: Sequence) => {
+      let sequenceNotes = generateSequenceNotes(sequence);
+      for (let i = 2; i < octaves; i++) {
+        const nextOctave: number[] = [];
+        for (let j = 0; j < 8; j++) {
+          nextOctave.push(sequenceNotes[j] + 12 * (i - 1));
+        }
+        sequenceNotes = Array.from(new Set([...sequenceNotes, ...nextOctave]));
       }
-      sequenceNotes = Array.from(new Set([...sequenceNotes, ...nextOctave]));
-    }
 
-    return sequenceNotes;
-  }, [octaves]);
+      return sequenceNotes;
+    },
+    [octaves],
+  );
 
-  function playNotes(sequence: Sequence) {
+  const playNotes = useCallback((sequence: Sequence) => {
     if (!audioContext) {
       setTimeout(() => {
-        const clickEvent = new MouseEvent("click", {
+        const clickEvent = new MouseEvent('click', {
           bubbles: true,
           cancelable: true,
           view: window,
         });
         setTimeout(() => {
-          document.querySelector(".play")?.dispatchEvent(clickEvent);
+          document.querySelector('.play')?.dispatchEvent(clickEvent);
         }, 100);
       }, 1);
-    } else {
-      if (sequence) {
-        const sequenceNotes = buildWholeSequence(sequence);
-        sequenceNotes.length > 7
-          ? playSequence(sequenceNotes)
-          : playChord(sequenceNotes);
-      }
+    } else if (sequence) {
+      const sequenceNotes = buildWholeSequence(sequence);
+      const playFn = sequenceNotes.length > 7 ? playSequence : playChord;
+      playFn(sequenceNotes);
     }
-  }
+  }, [audioContext, buildWholeSequence, playChord, playSequence]);
 
   useEffect(() => {
     let hasUserInteracted = false;
 
     async function createAudioContext() {
       if (hasUserInteracted) return;
-      
+
       try {
         // Modern AudioContext creation
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         if (!AudioContextClass) {
-          setAudioStatus('unsupported');
           return;
         }
-        
+
+        // iOS Safari fix: Set audio session type to playback to avoid muting on silent mode
+        if ('audioSession' in navigator) {
+          try {
+            (navigator.audioSession as any).type = 'playback';
+          } catch (error) {
+            // Ignore errors if audioSession API is not available
+          }
+        }
+
         const ctx = new AudioContextClass();
-        
+
         // Set up iOS Safari unlock
         unlockAudioContext(ctx);
-        
+
         hasUserInteracted = true;
         setAudioContext(ctx);
         setInit(true);
-        setAudioReady(ctx.state === 'running');
-        setAudioStatus(ctx.state === 'running' ? 'ready' : 'waiting for unlock');
-        
+
         // Remove event listeners after successful initialization
-        document.removeEventListener("click", createAudioContext);
-        document.removeEventListener("touchend", createAudioContext);
-        document.removeEventListener("touchstart", createAudioContext);
+        document.removeEventListener('click', createAudioContext);
+        document.removeEventListener('touchend', createAudioContext);
+        document.removeEventListener('touchstart', createAudioContext);
       } catch (error) {
-        setAudioStatus('error');
         hasUserInteracted = false; // Allow retry
       }
     }
 
     if (!init) {
-      setAudioStatus('waiting for user interaction');
-      document.addEventListener("click", createAudioContext, { once: false, capture: true });
-      document.addEventListener("touchend", createAudioContext, { once: false, capture: true });
-      document.addEventListener("touchstart", createAudioContext, { once: false, capture: true });
+      document.addEventListener('click', createAudioContext, {
+        once: false,
+        capture: true,
+      });
+      document.addEventListener('touchend', createAudioContext, {
+        once: false,
+        capture: true,
+      });
+      document.addEventListener('touchstart', createAudioContext, {
+        once: false,
+        capture: true,
+      });
     }
 
     return () => {
       if (!hasUserInteracted) {
-        document.removeEventListener("click", createAudioContext, true);
-        document.removeEventListener("touchend", createAudioContext, true);
-        document.removeEventListener("touchstart", createAudioContext, true);
+        document.removeEventListener('click', createAudioContext, true);
+        document.removeEventListener('touchend', createAudioContext, true);
+        document.removeEventListener('touchstart', createAudioContext, true);
       }
     };
   }, [init]);
@@ -416,9 +421,9 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
       const currentOctave = Math.floor(octaves / 2) + 2; // Estimate middle octave
       const neededSamples = bufferLoader.getSamplesForOctaveRange(
         Math.max(2, currentOctave - 1),
-        Math.min(6, currentOctave + Math.ceil(octaves / 2))
+        Math.min(6, currentOctave + Math.ceil(octaves / 2)),
       );
-      
+
       bufferLoader.fetchSamples(neededSamples);
     }
   }, [bufferLoader, octaves]);
@@ -435,21 +440,27 @@ export const AudioReactProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [audioContext, bufferLoader]);
 
+  const contextValue = useMemo(() => ({
+    audioContext,
+    playSequence,
+    playChord,
+    playTone,
+    playNotes,
+
+  }), [
+    audioContext,
+    playSequence,
+    playChord,
+    playTone,
+    playNotes,
+  ]);
   return (
     <ErrorBoundary>
       <AudioReactContext.Provider
-        value={{
-          audioContext,
-          playSequence,
-          playChord,
-          playTone,
-          playNotes,
-          audioReady,
-          audioStatus,
-        }}
+        value={contextValue}
       >
         {children}
       </AudioReactContext.Provider>
     </ErrorBoundary>
   );
-};
+}

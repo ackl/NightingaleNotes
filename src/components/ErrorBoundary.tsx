@@ -25,15 +25,21 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   render() {
-    if (this.state.hasError) {
-      return this.props.fallback || (
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-          <h3>Audio System Error</h3>
-          <p>The audio system encountered an error. Please refresh the page.</p>
-        </div>
+    const { hasError } = this.state;
+    const { fallback, children } = this.props;
+    if (hasError) {
+      return (
+        fallback || (
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <h3>Audio System Error</h3>
+            <p>
+              The audio system encountered an error. Please refresh the page.
+            </p>
+          </div>
+        )
       );
     }
 
-    return this.props.children;
+    return children;
   }
 }

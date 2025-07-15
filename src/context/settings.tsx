@@ -1,12 +1,15 @@
-import type { ReactNode } from 'react'
-import { useState, createContext } from 'react'
-import { Note, TONALITY, } from '../lib';
+import type { ReactNode } from 'react';
+import {
+  useCallback, useMemo, useState, createContext,
+} from 'react';
+import { Note, TONALITY } from '../lib';
 
 interface Settings {
   showIvoryLabels: boolean;
   onlyInKey: boolean;
+  setOnlyInKey: (arg: boolean) => void;
   octaves: number;
-  tonality: TONALITY
+  tonality: TONALITY;
   setTonality: (arg: TONALITY) => void;
   tonic: Note;
   setTonic: (arg: Note) => void;
@@ -18,106 +21,68 @@ interface Settings {
 const initialSettingsState: Settings = {
   showIvoryLabels: false,
   onlyInKey: true,
+  setOnlyInKey: () => { },
   octaves: 2,
-  tonality: TONALITY['MAJOR'],
-  setTonality: () => {},
+  tonality: TONALITY.MAJOR,
+  setTonality: () => { },
   tonic: 0,
-  setTonic: () => {},
-  increaseOctaves: () => {},
-  decreaseOctaves: () => {},
-  setShowIvoryLabels: () => {}
-}
+  setTonic: () => { },
+  increaseOctaves: () => { },
+  decreaseOctaves: () => { },
+  setShowIvoryLabels: () => { },
+};
 
 export const SettingsContext = createContext<Settings>(initialSettingsState);
 
-export const SettingsProvider = ({ children }: { children: ReactNode }) => {
-  const [showIvoryLabels, setShowIvoryLabels] = useState(initialSettingsState.showIvoryLabels);
+export function SettingsProvider({ children }: { children: ReactNode }) {
+  const [showIvoryLabels, setShowIvoryLabels] = useState(
+    initialSettingsState.showIvoryLabels,
+  );
   const [onlyInKey, setOnlyInKey] = useState(initialSettingsState.onlyInKey);
   const [octaves, setOctaves] = useState(initialSettingsState.octaves);
-  const [tonality, setTonality] = useState<TONALITY>(initialSettingsState.tonality);
+  const [tonality, setTonality] = useState<TONALITY>(
+    initialSettingsState.tonality,
+  );
   const [tonic, setTonic] = useState<Note>(0);
 
-  function increaseOctaves() {
-    setOctaves((prev) => prev > 3 ? 4 : prev + 1)
-  }
+  const increaseOctaves = useCallback(() => {
+    setOctaves((prev) => (prev > 3 ? 4 : prev + 1));
+  }, []);
 
-  function decreaseOctaves() {
-    setOctaves((prev) => prev < 3 ? 2 : prev - 1)
-  }
+  const decreaseOctaves = useCallback(() => {
+    setOctaves((prev) => (prev < 3 ? 2 : prev - 1));
+  }, []);
 
-  function ShowHideButton() {
-    return <button
-      onClick={() => {
-        setShowIvoryLabels(!showIvoryLabels)
-      }}
-    >
-      {`${showIvoryLabels ? 'hide' : 'show'} labels on keys`}
-    </button>
-  }
+  const contextValue = useMemo(() => ({
+    showIvoryLabels,
+    setShowIvoryLabels,
+    onlyInKey,
+    setOnlyInKey,
+    octaves,
+    tonality,
+    setTonality,
+    tonic,
+    setTonic,
+    increaseOctaves,
+    decreaseOctaves,
+  }), [
+    showIvoryLabels,
+    setShowIvoryLabels,
+    onlyInKey,
+    setOnlyInKey,
+    octaves,
+    tonality,
+    setTonality,
+    tonic,
+    setTonic,
+    increaseOctaves,
+    decreaseOctaves,
 
-  function OnlyInKey() {
-    return showIvoryLabels && <button
-      onClick={() => {
-        setOnlyInKey(!onlyInKey)
-      }}
-    >
-      {`${onlyInKey ? 'all keys' : 'only in scale'}`}
-    </button>
-  }
-
-  function OctavesButtons() {
-    return <div>
-      <label>number of octaves: {octaves}  </label>
-      <button onClick={increaseOctaves}>+</button>
-      <button onClick={decreaseOctaves}>-</button>
-    </div>
-  }
+  ]);
 
   return (
-    <SettingsContext.Provider value={{
-        showIvoryLabels,
-        setShowIvoryLabels,
-        onlyInKey,
-        octaves,
-        tonality,
-        setTonality,
-        tonic,
-        setTonic,
-        increaseOctaves,
-        decreaseOctaves
-    }}>
+    <SettingsContext.Provider value={contextValue}>
       {children}
-      <div className='settings-controls'>
-        <ShowHideButton />
-        <OnlyInKey />
-      </div>
-      <div className='octaves-controls'>
-        <OctavesButtons />
-      </div>
-      <div className='tonality-controls'>
-        <h3>tonality</h3>
-        {Object.entries(TONALITY).map(([t, label]) => {
-          return (
-            <button
-              key={label}
-              className={`${tonality === label ? 'active' : ''}`}
-              onClick={() => {
-                setTonality(TONALITY[t as keyof typeof TONALITY])
-            }}>{label}</button>
-          )
-        })}
-        <button
-          onClick={() => {
-            if (tonality === TONALITY.MAJOR) {
-              setTonic((tonic + 9) % 12 as Note);
-              setTonality(TONALITY.MINOR_NATURAL);
-            } else {
-              setTonality(TONALITY.MAJOR);
-              setTonic((tonic + 3) % 12 as Note);
-            }
-          }}
-        >go to relative {tonality === TONALITY.MAJOR ? 'minor' : 'major'}</button>
-      </div>
     </SettingsContext.Provider>
   );
-};
+}

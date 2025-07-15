@@ -1,23 +1,12 @@
 import { Ivory } from './ivory';
-import {
-  notes,
-} from '../lib';
+import { notes } from '../lib';
 
-export function Octave(props: {
-  octave: number,
-}) {
+export function Octave(props: { octave: number }) {
   return (
     <>
-      {
-        notes.map(note => (
-          <Ivory
-            {...props}
-            note={note}
-            key={note}
-          />
-        ))
-      }
+      {notes.map((note) => (
+        <Ivory {...props} note={note} key={note} />
+      ))}
     </>
-  )
+  );
 }
-

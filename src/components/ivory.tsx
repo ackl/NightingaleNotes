@@ -1,12 +1,12 @@
 import { memo, useContext, useMemo } from 'react';
 import { useHaptic } from 'use-haptic';
 import { NotesContext, SettingsContext, AudioReactContext } from '../context';
-import { whiteKeys } from '../lib';
+import { naturalNotes } from '../lib';
 import type { Note } from '../lib';
 
 export const Ivory = memo(
   ({ note, octave }: { note: Note; octave: number }) => {
-    const isWhiteKey = useMemo(() => whiteKeys.includes(note), [note]);
+    const isWhiteKey = useMemo(() => naturalNotes.includes(note), [note]);
     const {
       tonic, showIvoryLabels, onlyInKey, octaves,
     } = useContext(SettingsContext);
@@ -35,7 +35,7 @@ export const Ivory = memo(
 
     if (note === 0 && (noteLabel === 'TODO' || !noteLabel)) {
       console.log('inside the if statement', scale);
-      noteLabel = scale.labels[11];
+      noteLabel = scale.labels[scale.labels.length - 1];
     }
 
     let isHighlight = true;

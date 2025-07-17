@@ -14,7 +14,7 @@
 
 import { Note, NoteLabel, Sequence } from '../core/primitives';
 import { buildChord } from '../core/chords';
-import { getDiatonicChordTypes } from '../theory/roman-numerals';
+import { tonalityDiatonicChordsMap } from '../theory/roman-numerals';
 import type { KeySignature } from './calculator';
 
 /**
@@ -122,7 +122,8 @@ function generateChordLabels(
 export function buildDiatonicTriads(keySignature: KeySignature): Sequence[] {
   const scale = keySignature.scaleAscending;
   return scale.notes.map((root, i) => {
-    const chordType = getDiatonicChordTypes(keySignature.tonality)[i];
+    const { chordTypes } = tonalityDiatonicChordsMap[keySignature.tonality];
+    const chordType = chordTypes[i];
     const triad = buildChord(root, chordType);
     const labels = generateChordLabels(triad, keySignature);
 

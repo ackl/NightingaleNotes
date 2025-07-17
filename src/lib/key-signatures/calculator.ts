@@ -15,7 +15,7 @@
 import {
   Note, Sequence, NoteLabel, AccidentalName, circleOfFifths,
 } from '../core/primitives';
-import { TONALITY, tonalityIntervals } from '../core/scales';
+import { TONALITY, buildScale } from '../core/scales';
 import {
   findBaseLetterAndAccidental,
   getBaseLetters,
@@ -75,7 +75,7 @@ const FLAT_KEY_RANGE = { min: 8, max: 11 };
 /**
  * Total number of positions in the circle of fifths (one for each chromatic note).
  */
-const CIRCLE_OF_FIFTHS_LENGTH = 12;
+const CIRCLE_OF_FIFTHS_LENGTH = circleOfFifths.length;
 
 /**
  * Type representing accidental types allowed in key signatures.
@@ -183,12 +183,15 @@ function calculateAccidentalsList(
   accidentalType: KeySignatureAccidentalType,
   circleOfFifthsIndex: number,
 ): Note[] {
+  if (accidentalType === 'FLAT') {
+    return FLAT_ORDER.slice(0, CIRCLE_OF_FIFTHS_LENGTH - circleOfFifthsIndex);
+  }
+
   if (accidentalType === 'SHARP') {
     return SHARP_ORDER.slice(0, circleOfFifthsIndex);
   }
 
-  const numFlats = CIRCLE_OF_FIFTHS_LENGTH - circleOfFifthsIndex;
-  return FLAT_ORDER.slice(0, numFlats);
+  return [];
 }
 
 /**
@@ -315,10 +318,7 @@ export function getKeySignatures(
   }
 
   const keySignatures: KeySignature[] = [];
-  const intervals = tonalityIntervals[tonality];
-  const scaleNotes = intervals.map(
-    (interval) => ((tonic + interval) % 12) as Note,
-  );
+  const scaleNotes = buildScale(tonic, tonality);
 
   // Determine whether this key uses sharps, flats, or both
   const accidentalTypes = determineAccidentalTypes(index);
@@ -327,8 +327,6 @@ export function getKeySignatures(
   for (const type of accidentalTypes) {
     const accidentalsList = calculateAccidentalsList(type, index);
     const labels = calculateScaleLabels(scaleNotes, tonic, type, tonality);
-
-    console.log('LABELS', labels, scaleNotes, accidentalsList);
 
     keySignatures.push({
       tonic,

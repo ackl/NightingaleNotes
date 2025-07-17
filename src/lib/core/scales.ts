@@ -42,7 +42,7 @@ export enum TONALITY {
  * whiteKeys // [0, 2, 4, 5, 7, 9, 11] = C, D, E, F, G, A, B
  * ```
  */
-export const whiteKeys: Note[] = [0, 2, 4, 5, 7, 9, 11];
+export const naturalNotes: Note[] = [0, 2, 4, 5, 7, 9, 11];
 
 /**
  * Map of each tonality to its characteristic interval pattern.
@@ -60,7 +60,7 @@ export const tonalityIntervals: Record<TONALITY, Note[]> = {
    * Major scale intervals: W-W-H-W-W-W-H
    * Pattern: 1-2-3-4-5-6-7 (all natural degrees)
    */
-  [TONALITY.MAJOR]: whiteKeys,
+  [TONALITY.MAJOR]: naturalNotes,
 
   /**
    * Natural minor scale intervals: W-H-W-W-H-W-W
@@ -113,3 +113,8 @@ export const diatonicDegreeNames = [
   /** 8th degree - octave return to tonic */
   'Tonic',
 ];
+
+export function buildScale(tonic: number, tonality: TONALITY): Note[] {
+  const intervals = tonalityIntervals[tonality];
+  return intervals.map((interval) => (tonic + interval) % 12 as Note);
+}

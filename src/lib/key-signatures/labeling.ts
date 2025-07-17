@@ -22,7 +22,7 @@ import {
   accidentals,
   NoteLabel,
 } from '../core/primitives';
-import { TONALITY, whiteKeys, tonalityIntervals } from '../core/scales';
+import { TONALITY, naturalNotes, tonalityIntervals } from '../core/scales';
 import { wrapArray } from '../utils/array-utils';
 
 /**
@@ -65,7 +65,7 @@ export function getBaseLetters(tonicBase: NoteLabelBase): NoteLabelBase[] {
  */
 export function labelToNote(noteLabel: NoteLabelBase): Note {
   const idx = noteLabels.indexOf(noteLabel);
-  return whiteKeys[idx];
+  return naturalNotes[idx];
 }
 
 /**

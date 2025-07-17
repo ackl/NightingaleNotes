@@ -95,7 +95,7 @@ export type NoteLabelBase = (typeof noteLabels)[number];
  * const df: NoteLabel = "D♭";
  * ```
  */
-export type NoteLabel = `${NoteLabelBase}${AccidentalSymbol}` | NoteLabelBase;
+export type NoteLabel = NoteLabelBase | `${NoteLabelBase}${AccidentalSymbol}`;
 
 /**
  * Type representing a musical sequence with both numeric and label representations.
@@ -217,6 +217,7 @@ export const circleOfFifths: Note[] = Array.from(
 
 /**
  * Calculates the note that results from adding an interval to a base note.
+ * i.e. Transposes a note
  * Uses modulo 12 arithmetic to handle octave wrapping.
  *
  * @param lower - The starting note (0-11)
@@ -230,5 +231,28 @@ export const circleOfFifths: Note[] = Array.from(
  * ```
  */
 export function getNoteFromInterval(lower: Note, interval: number): Note {
-  return ((lower + interval) % 12) as Note;
+  let newNote = ((lower + interval) % 12);
+  if (interval < 0) {
+    newNote = (newNote + 12) % 12;
+  }
+  return newNote as Note;
+}
+
+/**
+ * Calculates the interval between two notes (in semitones).
+ * Returns the shortest interval from note1 to note2 within one octave.
+ *
+ * @param note1 - The starting note (0-11)
+ * @param note2 - The ending note (0-11)
+ * @returns The interval in semitones (0-11)
+ *
+ * @example
+ * ```typescript
+ * calculateInterval(0, 7)  // 7 (C to G = perfect fifth)
+ * calculateInterval(7, 0)  // 5 (G to C = perfect fourth)
+ * calculateInterval(11, 0) // 1 (B to C = minor second)
+ * ```
+ */
+export function calculateInterval(note1: Note, note2: Note): number {
+  return ((note2 - note1 + 12) % 12);
 }

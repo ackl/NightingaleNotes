@@ -81,26 +81,20 @@ class BufferLoader {
 
   currentlyFetching: Set<SampleName>;
 
+  decoded: Set<SampleName>; // Track which samples have been decoded
+
   constructor() {
     this.filenames = sampleFilenames;
     this.arrayBuffers = {};
     this.audioBuffers = null;
     this.fetched = new Set();
     this.currentlyFetching = new Set();
+    this.decoded = new Set();
   }
 
   // Load essential samples for immediate playback (current octave range)
   async fetchEssentials() {
-    const essentialSamples = [
-      'C3',
-      'Ds3',
-      'Fs3',
-      'A3',
-      'C4',
-      'Ds4',
-      'Fs4',
-      'A4',
-    ] as SampleName[];
+    const essentialSamples = ['C3', 'Ds3', 'Fs3', 'A3', 'C4', 'Ds4', 'Fs4', 'A4'] as SampleName[];
     return this.fetchSamples(essentialSamples);
   }
 
@@ -155,14 +149,21 @@ class BufferLoader {
     }
 
     Object.entries(this.arrayBuffers).forEach(([note, arrayBuf]) => {
-      if (!this.audioBuffers![note as SampleName]) {
+      const sampleName = note as SampleName;
+
+      // Only decode if we haven't already decoded this sample
+      if (!this.decoded.has(sampleName) && !this.audioBuffers![sampleName]) {
+        this.decoded.add(sampleName); // Mark as being decoded
+
         ctx
           .decodeAudioData(arrayBuf)
           .then((sample) => {
-            this.audioBuffers![note as SampleName] = sample;
+            this.audioBuffers![sampleName] = sample;
           })
           .catch((error) => {
             console.error(`Failed to decode audio data for ${note}:`, error);
+            // Remove from decoded set if decoding fails so we can retry
+            this.decoded.delete(sampleName);
           });
       }
     });
@@ -210,7 +211,7 @@ export function AudioReactProvider({ children }: { children: ReactNode }) {
       try {
         source.stop();
       } catch (e) {
-        console.log(e);
+        console.error(e);
       }
     });
     setActiveSources([]);
@@ -311,10 +312,15 @@ export function AudioReactProvider({ children }: { children: ReactNode }) {
   const buildWholeSequence = useCallback(
     (sequence: Sequence) => {
       let sequenceNotes = generateSequenceNotes(sequence);
+      const originalLength = sequenceNotes.length;
       for (let i = 2; i < octaves; i++) {
         const nextOctave: number[] = [];
-        for (let j = 0; j < 8; j++) {
-          nextOctave.push(sequenceNotes[j] + 12 * (i - 1));
+        for (let j = 0; j < originalLength; j++) {
+          const noteValue = sequenceNotes[j] + 12 * (i - 1);
+          // Limit to valid sample range (C2 to A6, approximately 0 to 69)
+          if (noteValue <= 69) {
+            nextOctave.push(noteValue);
+          }
         }
         sequenceNotes = Array.from(new Set([...sequenceNotes, ...nextOctave]));
       }
@@ -338,7 +344,8 @@ export function AudioReactProvider({ children }: { children: ReactNode }) {
       }, 1);
     } else if (sequence) {
       const sequenceNotes = buildWholeSequence(sequence);
-      const playFn = sequenceNotes.length > 7 ? playSequence : playChord;
+      // Use expanded sequence length to determine chord vs arpeggio
+      const playFn = sequenceNotes.length > 6 ? playSequence : playChord;
       playFn(sequenceNotes);
     }
   }, [audioContext, buildWholeSequence, playChord, playSequence]);

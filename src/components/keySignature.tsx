@@ -9,7 +9,6 @@ export function KeySignature() {
   useEffect(() => {
     // eslint-disable-next-line
     let key = `${keySignature.scaleAscending.labels[0]}${keySignature.tonality === TONALITY.MAJOR ? '' : 'm'}`;
-    console.log('trying to render key: ', key);
 
     // Replace unicode accidental symbol with b and # for compatibility with abcjs
     key = key.replace('♭', 'b');

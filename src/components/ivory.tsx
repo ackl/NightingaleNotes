@@ -26,7 +26,6 @@ export const Ivory = memo(
         return scale.labels[idx];
       }
 
-      console.log('will render BLANK on the key', note, idx);
       return null;
     }
 
@@ -34,12 +33,10 @@ export const Ivory = memo(
     let noteLabel = isNoteInScale ? getNoteLabelFromScale() : 'TODO';
 
     if (note === 0 && (noteLabel === 'TODO' || !noteLabel)) {
-      console.log('inside the if statement', scale);
       noteLabel = scale.labels[scale.labels.length - 1];
     }
 
     let isHighlight = true;
-    console.log('rendering key for ', note, noteLabel, scale.notes);
 
     if (chord) {
       isHighlight = chord.notes.includes(note);

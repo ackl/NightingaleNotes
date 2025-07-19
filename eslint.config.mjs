@@ -59,6 +59,7 @@ export default [
       'import-x/prefer-default-export': 0,
       'no-plusplus': 0,
       '@typescript-eslint/naming-convention': 0,
+      'no-console': ["error", { allow: ["warn", "error"] }],
       'no-restricted-syntax': [
         'error',
         {

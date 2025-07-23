@@ -72,7 +72,7 @@ export function labelToNote(noteLabel: NoteLabelBase): Note {
  * Type representing accidental types allowed in key signatures.
  * Excludes double sharps and double flats as they don't appear in standard key signatures.
  */
-type KeySignatureAccidentalType = Exclude<
+export type KeySignatureAccidentalType = Exclude<
   AccidentalName,
   'DOUBLE_FLAT' | 'DOUBLE_SHARP'
 >;

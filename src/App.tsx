@@ -99,7 +99,7 @@ function App() {
 
         <KeySignature />
       </section>
-      <section className="enharmonic-key-selector">
+      <section className="enharmonic-key-selector flex gap-2 justify-center">
         {keySignatures.length > 1
           ? keySignatures.map((kS, i) => (
             <Button

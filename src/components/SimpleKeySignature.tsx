@@ -1,29 +1,30 @@
-import { useContext, useRef } from 'react';
+import { useEffect, useContext, useRef } from 'react';
 import { NotesContext } from '../context';
 import { SHARP_ORDER, FLAT_ORDER } from '../lib/key-signatures/calculator';
 import { KeySignatureAccidentalType } from '../lib/key-signatures/labeling';
 import { NaturalNote } from '../lib/core/scales';
 
-const commonAccidentalPositions: Record<NaturalNote, number> = {
-  11: 40, // B
-  4: 25, // E
-  9: 45, // A
-  2: 30, // D
-  0: 35, // C
-  5: 0, // F
-  7: 0, // G
-};
+// Y positions for treble clef staff positions for each note (0-11)
+// Based on traditional treble clef positioning
 
 const TREBLE_CLEF_POSITIONS: Record<Exclude<KeySignatureAccidentalType, 'NATURAL'>,
   Record<NaturalNote, number>> = {
     SHARP: {
-      ...commonAccidentalPositions,
       5: 20, // F
+      0: 35, // C
       7: 15, // G
+      2: 30, // D
+      9: 45, // A
+      4: 25, // E
+      11: 40, // B
     },
     FLAT: {
-      ...commonAccidentalPositions,
+      11: 40, // B
+      4: 25, // E
+      9: 45, // A
+      2: 30, // D
       7: 50, // G
+      0: 35, // C
       5: 55, // F
     },
   };
@@ -33,7 +34,7 @@ function getStaffPosition(note: number, accidentalType: KeySignatureAccidentalTy
   return TREBLE_CLEF_POSITIONS[accidentalType][note] || 35;
 }
 
-export function KeySignature() {
+export function SimpleKeySignature() {
   const { keySignature } = useContext(NotesContext);
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -99,3 +100,4 @@ export function KeySignature() {
     />
   );
 }
+

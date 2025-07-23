@@ -15,7 +15,7 @@
 import {
   Note, Sequence, NoteLabel, AccidentalName, circleOfFifths,
 } from '../core/primitives';
-import { TONALITY, buildScale } from '../core/scales';
+import { TONALITY, NaturalNote, buildScale } from '../core/scales';
 import {
   findBaseLetterAndAccidental,
   getBaseLetters,
@@ -40,7 +40,7 @@ import {
  * SHARP_ORDER.slice(0, 4) // [5, 0, 7, 2] = F#, C#, G#, D#
  * ```
  */
-export const SHARP_ORDER: Note[] = [5, 0, 7, 2, 9, 4, 11]; // F, C, G, D, A, E, B
+export const SHARP_ORDER: NaturalNote[] = [5, 0, 7, 2, 9, 4, 11];
 
 /**
  * The order in which flats appear in key signatures.
@@ -58,7 +58,7 @@ export const SHARP_ORDER: Note[] = [5, 0, 7, 2, 9, 4, 11]; // F, C, G, D, A, E, 
  * FLAT_ORDER.slice(0, 4) // [11, 4, 9, 2] = Bb, Eb, Ab, Db
  * ```
  */
-export const FLAT_ORDER: Note[] = [11, 4, 9, 2, 7, 0, 5]; // B, E, A, D, G, C, F
+export const FLAT_ORDER: NaturalNote[] = [11, 4, 9, 2, 7, 0, 5]; // B, E, A, D, G, C, F
 
 /**
  * Range of circle of fifths positions that typically use sharp key signatures.
@@ -114,7 +114,7 @@ export interface KeySignature {
   /** The scale type (Major, Minor Natural, etc.) */
   tonality: TONALITY;
   /** Array of notes that have accidentals in this key signature */
-  accidentals: Note[];
+  accidentals: NaturalNote[];
   /** Whether this key signature uses sharps, flats, or naturals */
   accidentalType: KeySignatureAccidentalType;
   /** The complete scale with proper note labels */
@@ -182,7 +182,7 @@ function determineAccidentalTypes(
 function calculateAccidentalsList(
   accidentalType: KeySignatureAccidentalType,
   circleOfFifthsIndex: number,
-): Note[] {
+): NaturalNote[] {
   if (accidentalType === 'FLAT') {
     return FLAT_ORDER.slice(0, CIRCLE_OF_FIFTHS_LENGTH - circleOfFifthsIndex);
   }

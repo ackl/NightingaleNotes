@@ -2,11 +2,11 @@ import { memo, useContext, useMemo } from 'react';
 import { useHaptic } from 'use-haptic';
 import { NotesContext, SettingsContext, AudioReactContext } from '../context';
 import { naturalNotes } from '../lib';
-import type { Note } from '../lib';
+import type { NaturalNote, Note } from '../lib';
 
 export const Ivory = memo(
   ({ note, octave }: { note: Note; octave: number }) => {
-    const isWhiteKey = useMemo(() => naturalNotes.includes(note), [note]);
+    const isWhiteKey = useMemo(() => naturalNotes.includes(note as NaturalNote), [note]);
     const {
       tonic, showIvoryLabels, onlyInKey, octaves,
     } = useContext(SettingsContext);

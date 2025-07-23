@@ -42,7 +42,8 @@ export enum TONALITY {
  * whiteKeys // [0, 2, 4, 5, 7, 9, 11] = C, D, E, F, G, A, B
  * ```
  */
-export const naturalNotes: Note[] = [0, 2, 4, 5, 7, 9, 11];
+export const naturalNotes = [0, 2, 4, 5, 7, 9, 11] as const satisfies Note[];
+export type NaturalNote = (typeof naturalNotes)[number];
 
 /**
  * Map of each tonality to its characteristic interval pattern.

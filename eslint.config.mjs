@@ -3,6 +3,7 @@ import path from 'node:path';
 import { includeIgnoreFile } from '@eslint/compat';
 import js from '@eslint/js';
 import { configs, plugins } from 'eslint-config-airbnb-extended';
+import vitest from '@vitest/eslint-plugin';
 
 const gitignorePath = path.resolve('.', '.gitignore');
 
@@ -59,7 +60,7 @@ export default [
       'import-x/prefer-default-export': 0,
       'no-plusplus': 0,
       '@typescript-eslint/naming-convention': 0,
-      'no-console': ["error", { allow: ["warn", "error"] }],
+      'no-console': ["error", { allow: ["warn", "error", "debug"] }],
       'no-restricted-syntax': [
         'error',
         {
@@ -75,6 +76,17 @@ export default [
           message: '`with` is disallowed in strict mode because it makes code impossible to predict and optimize.',
         },
       ],
+    },
+  },
+  {
+    name: 'test',
+    files: ['**/__tests__/*.{j,t}s?(x)'], // or any other pattern
+    plugins: {
+      vitest,
+    },
+    rules: {
+      ...vitest.configs.recommended.rules, // you can also use vitest.configs.all.rules to enable all rules
+      'vitest/max-nested-describe': ['error', { max: 3 }], // you can also modify rules' behavior using option like this
     },
   },
 ];

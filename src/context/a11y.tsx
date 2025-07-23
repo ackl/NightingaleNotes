@@ -15,13 +15,16 @@ export function A11yProvider({ children }: { children: ReactNode }) {
     setTonality,
     tonic,
     setTonic,
+    octaves,
     increaseOctaves,
     decreaseOctaves,
     showIvoryLabels,
+    onlyInKey,
     setShowIvoryLabels,
+    setOnlyInKey,
   } = useContext(SettingsContext);
 
-  const { playNotes } = useContext(AudioReactContext);
+  const { audioContextManager } = useContext(AudioReactContext);
 
   const {
     chord, keySignature, diatonicChordRoot, setDiatonicChordRoot,
@@ -70,13 +73,17 @@ export function A11yProvider({ children }: { children: ReactNode }) {
     setShowIvoryLabels(!showIvoryLabels);
   }, [showIvoryLabels, setShowIvoryLabels]);
 
+  const handleShowAllLabels = useCallback(() => {
+    setOnlyInKey(!onlyInKey);
+  }, [onlyInKey, setOnlyInKey]);
+
   const keypressCallback = useCallback(
     (ev: KeyboardEvent) => {
       let newTonic: Note;
 
       switch (ev.code) {
         case 'Space':
-          playNotes(chord || keySignature.scaleAscending);
+          audioContextManager?.playNotes(chord || keySignature.scaleAscending, octaves);
           ev.preventDefault();
           break;
         case 'KeyJ':
@@ -91,6 +98,9 @@ export function A11yProvider({ children }: { children: ReactNode }) {
           break;
         case 'KeyS':
           handleShowLabels();
+          break;
+        case 'KeyA':
+          handleShowAllLabels();
           break;
         case 'KeyH':
         case 'ArrowLeft':
@@ -123,6 +133,8 @@ export function A11yProvider({ children }: { children: ReactNode }) {
       }
     },
     [
+      octaves,
+      audioContextManager,
       chord,
       keySignature,
       tonic,
@@ -131,8 +143,8 @@ export function A11yProvider({ children }: { children: ReactNode }) {
       decreaseOctaves,
       goToRelative,
       handleTonality,
+      handleShowAllLabels,
       handleTriad,
-      playNotes,
       handleShowLabels,
     ],
   );

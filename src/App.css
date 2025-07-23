@@ -1,3 +1,5 @@
+@import "tailwindcss";
+
 body {
   font-family: "Noto Sans", sans-serif;
   font-optical-sizing: auto;
@@ -149,12 +151,20 @@ main {
   position: absolute;
   left: 1em;
   bottom: 1em;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
 }
 
 .octaves-controls {
   position: absolute;
   right: 1em;
   bottom: 1em;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 /* Orientation hint for portrait mobile users */
@@ -250,44 +260,6 @@ main {
   }
 }
 
-button {
-  margin-right: 1em;
-  margin-bottom: 4px;
-  outline: 0;
-  border: 1px solid lightblue;
-  border-radius: 8px;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-  /* Better touch targets */
-  min-height: 44px;
-  min-width: 44px;
-  touch-action: manipulation;
-}
-
-button:hover {
-  border-color: black;
-}
-
-
-button.play {
-  border-color: lightblue;
-}
-
-/*active button*/
-button.active {
-  background-color: #d6804f;
-}
-
-button:active {
-  background-color: red;
-  transform: scale(0.98); /* simulate button press effect */
-}
-
 #paper {
   position: absolute;
   top: 1em;
@@ -318,20 +290,6 @@ button:active {
   position: absolute;
   top: 1em;
   right: 1em;
-}
-
-.diatonic-chords {
-  margin-top: 3rem;
-}
-
-.diatonic-chords button {
-  min-width: 42px;
-}
-
-@media screen and (min-width: 769px) {
-  .diatonic-chords button {
-    min-width: 66px;
-  }
 }
 
 .modal {

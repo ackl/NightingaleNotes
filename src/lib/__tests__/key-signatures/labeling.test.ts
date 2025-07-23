@@ -9,7 +9,7 @@ import {
   getMinorKeyLabel,
 } from '../../key-signatures/labeling';
 import {
-  type Note, type NoteLabelBase, noteLabels, accidentals,
+  type Note, type NoteLabelBase, noteLabels,
 } from '../../core/primitives';
 import { TONALITY } from '../../core/scales';
 

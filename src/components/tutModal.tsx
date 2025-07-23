@@ -19,6 +19,8 @@ export function TutModal() {
       <p>press J/K or up/down to change key</p>
       <p>press H/L or left/right to select tonality</p>
       <p>press 1-7 to (de)select triad</p>
+      <p>press S to show/hide note labels</p>
+      <p>press A to show/hide all note labels</p>
       <p>press m to go to relative minor/major</p>
       <b>press ESC to exit/enter tutorial</b>
       <button

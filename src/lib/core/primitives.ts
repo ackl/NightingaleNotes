@@ -256,3 +256,39 @@ export function getNoteFromInterval(lower: Note, interval: number): Note {
 export function calculateInterval(note1: Note, note2: Note): number {
   return ((note2 - note1 + 12) % 12);
 }
+
+export function generateSequenceNotes(sequence: Sequence) {
+  const max = Math.max(...sequence.notes);
+  const maxIdx = sequence.notes.indexOf(max as Note);
+
+  // rearrange so that whole array of notes is only
+  // ascending numbers without the modulo 12
+  // this is so that the audioContext sample can use this value
+  // to determine how to detune the A440 sample
+  const lower = sequence.notes.slice(0, maxIdx + 1);
+
+  // const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12);
+  const upper = sequence.notes.slice(maxIdx + 1).map((x) => x + 12);
+
+  // since we build notes of a heptatonic add back the octave
+  const sequenceNotes = [...lower, ...upper, lower[0] + 12];
+  return sequenceNotes;
+}
+
+export function buildWholeSequence(sequence: Sequence, octaves: number) {
+  let sequenceNotes = generateSequenceNotes(sequence);
+  const originalLength = sequenceNotes.length;
+  for (let i = 2; i < octaves; i++) {
+    const nextOctave: number[] = [];
+    for (let j = 0; j < originalLength; j++) {
+      const noteValue = sequenceNotes[j] + 12 * (i - 1);
+      if (Number.isNaN(noteValue)) {
+        throw Error('You fucked up dawg');
+      }
+      nextOctave.push(noteValue);
+    }
+    sequenceNotes = Array.from(new Set([...sequenceNotes, ...nextOctave]));
+  }
+
+  return sequenceNotes;
+}

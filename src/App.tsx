@@ -1,4 +1,6 @@
-import { useContext, useEffect, useRef } from 'react';
+import {
+  useContext, useEffect, useRef,
+} from 'react';
 import {
   getMajorKeyLabel,
   getMinorKeyLabel,
@@ -18,6 +20,7 @@ import {
   TonalityControls,
 } from './components/SettingsControls';
 import { DiatonicChords } from './components/DiatonicChords';
+import { Button } from './components/Button';
 
 function App() {
   const {
@@ -26,10 +29,12 @@ function App() {
     setTonic,
     octaves,
   } = useContext(SettingsContext);
-  const { keySignatures, keySignature, setChosenKeySigIdx } = useContext(
+  const {
+    chord, keySignatures, keySignature, setChosenKeySigIdx,
+  } = useContext(
     NotesContext,
   );
-  const { playNotes } = useContext(AudioReactContext);
+  const { audioContextManager } = useContext(AudioReactContext);
   const $mainRef = useRef<HTMLElement>(null);
 
   function keyboardOverflowHandler() {
@@ -61,14 +66,17 @@ function App() {
         <div className="shadow" />
       </div>
       <TutModal />
+      <div style={{
+        position: 'fixed', top: '1rem', right: '1rem', zIndex: 1000,
+      }} />
       <section className="play-button">
-        <button
-          type="button"
+        <Button
           className="play"
-          onClick={() => playNotes(keySignature.scaleAscending)}
+          onClick={() => audioContextManager?.playNotes(chord
+            || keySignature.scaleAscending, octaves)}
         >
           ►
-        </button>
+        </Button>
       </section>
       <section className="key-selector">
         <label htmlFor="key">Key:
@@ -94,8 +102,7 @@ function App() {
       <section className="enharmonic-key-selector">
         {keySignatures.length > 1
           ? keySignatures.map((kS, i) => (
-            <button
-              type="button"
+            <Button
               /* eslint-disable-next-line */
               key={`${kS.tonic}-${i}`}
               onClick={() => {
@@ -103,7 +110,7 @@ function App() {
               }}
             >
               {kS.scaleAscending.labels[0]}
-            </button>
+            </Button>
           ))
           : null}
       </section>

@@ -3,7 +3,6 @@ import {
   SHARP_ORDER,
   FLAT_ORDER,
   getKeySignatures,
-  type KeySignature,
 } from '../../key-signatures/calculator';
 import { TONALITY } from '../../core/scales';
 import { type Note } from '../../core/primitives';

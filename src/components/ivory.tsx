@@ -14,7 +14,7 @@ export const Ivory = memo(
       chord,
       keySignature: { scaleAscending: scale },
     } = useContext(NotesContext);
-    const { playTone } = useContext(AudioReactContext);
+    const { audioContextManager } = useContext(AudioReactContext);
     const { triggerHaptic } = useHaptic();
 
     const isFirstOctave = octave === 0;
@@ -30,11 +30,11 @@ export const Ivory = memo(
     }
 
     const isNoteInScale = scale.notes.includes(note);
-    let noteLabel = isNoteInScale ? getNoteLabelFromScale() : 'TODO';
+    const noteLabel = isNoteInScale ? getNoteLabelFromScale() : 'TODO';
 
-    if (note === 0 && (noteLabel === 'TODO' || !noteLabel)) {
-      noteLabel = scale.labels[scale.labels.length - 1];
-    }
+    // if (note === 0 && (noteLabel === 'TODO' || !noteLabel)) {
+    //   noteLabel = scale.labels[scale.labels.length - 1];
+    // }
 
     let isHighlight = true;
 
@@ -61,7 +61,7 @@ export const Ivory = memo(
         onClick={async (e) => {
           e.stopPropagation();
           triggerHaptic();
-          await playTone(note + octave * 12);
+          await audioContextManager?.playTone(note + octave * 12);
         }}
         onTouchStart={(e) => {
           // iOS Safari sometimes needs touchstart to be explicitly handled

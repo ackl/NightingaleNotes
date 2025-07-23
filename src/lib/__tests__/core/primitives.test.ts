@@ -39,37 +39,19 @@ describe('Core Primitives', () => {
       expect(accidentals.DOUBLE_FLAT).toBe('𝄫');
     });
 
-    it('should have correct Unicode symbols', () => {
-      // Test that symbols are actual Unicode musical symbols
-      expect(accidentals.SHARP).toMatch(/♯/);
-      expect(accidentals.FLAT).toMatch(/♭/);
-      expect(accidentals.NATURAL).toMatch(/♮/);
-      expect(accidentals.DOUBLE_SHARP).toMatch(/𝄪/);
-      expect(accidentals.DOUBLE_FLAT).toMatch(/𝄫/);
-    });
-
-    it('should have exactly 5 accidental types', () => {
+    it('should have 5 accidental types (may extend in future))', () => {
       expect(Object.keys(accidentals)).toHaveLength(5);
-    });
-
-    it('should be readonly in TypeScript', () => {
-      // TypeScript enforces immutability at compile time
-      expect(accidentals.SHARP).toBe('♯');
     });
   });
 
   describe('Note Labels', () => {
     it('should contain all 7 natural note names', () => {
+      // also should be in correct alphabetical order
       expect(noteLabels).toHaveLength(7);
       expect(noteLabels).toEqual(['C', 'D', 'E', 'F', 'G', 'A', 'B']);
     });
 
     it('should be in correct alphabetical order', () => {
-      expect(noteLabels).toEqual(['C', 'D', 'E', 'F', 'G', 'A', 'B']);
-    });
-
-    it('should be readonly in TypeScript', () => {
-      // TypeScript enforces immutability at compile time
       expect(noteLabels).toEqual(['C', 'D', 'E', 'F', 'G', 'A', 'B']);
     });
   });
@@ -150,11 +132,6 @@ describe('Core Primitives', () => {
     });
 
     it('should be generated correctly using perfect fifths', () => {
-      // Verify that the circle of fifths is properly generated
-      const expectedCircle = [0, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10, 5];
-      expect(circleOfFifths).toEqual(expectedCircle);
-
-      // Also verify the generation algorithm
       for (let i = 0; i < 12; i++) {
         const expectedNote = ((i * INTERVALS.P5) % 12) as Note;
         expect(circleOfFifths[i]).toBe(expectedNote);

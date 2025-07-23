@@ -18,7 +18,7 @@ interface Settings {
   setShowIvoryLabels: (arg: boolean) => void;
 }
 
-const initialSettingsState: Settings = {
+export const initialSettingsState: Settings = {
   showIvoryLabels: false,
   onlyInKey: true,
   setOnlyInKey: () => { },

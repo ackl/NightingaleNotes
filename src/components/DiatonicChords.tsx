@@ -6,6 +6,7 @@ import {
   tonalityDiatonicChordsMap,
   Note,
 } from '../lib';
+import { Button } from './Button';
 
 export function DiatonicChords() {
   const { diatonicChordRoot, setDiatonicChordRoot } = useContext(NotesContext);
@@ -15,24 +16,26 @@ export function DiatonicChords() {
   return (
     <>
       <div className="diatonic-chords">
-        <h3>diatonic triads</h3>
-        {romanNumerals.map((label, i) => (
-          <button
-            type="button"
-            key={label}
-            onClick={() => {
-              // set i as degree of scale for root of diatonic chords
-              if (diatonicChordRoot === i) {
-                setDiatonicChordRoot(undefined);
-              } else {
-                setDiatonicChordRoot(i as Note);
-              }
-            }}
-            className={diatonicChordRoot === i ? 'active' : ''}
-          >
-            {label}
-          </button>
-        ))}
+        <h3 className="mb-2">diatonic triads</h3>
+        <div className="flex items-center gap-2 justify-center">
+          {romanNumerals.map((label, i) => (
+            <Button
+              type="button"
+              key={label}
+              onClick={() => {
+                // set i as degree of scale for root of diatonic chords
+                if (diatonicChordRoot === i) {
+                  setDiatonicChordRoot(undefined);
+                } else {
+                  setDiatonicChordRoot(i as Note);
+                }
+              }}
+              variant={diatonicChordRoot === i ? 'selected' : 'default'}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
       </div>
       <p className="degree-name">
         {diatonicChordRoot !== undefined

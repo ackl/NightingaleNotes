@@ -1,19 +1,20 @@
 import { useContext } from 'react';
 import { SettingsContext } from '../context/settings';
 import { TONALITY } from '../lib';
+import { Button } from './Button';
 
 export function ShowHideButton() {
   const { showIvoryLabels, setShowIvoryLabels } = useContext(SettingsContext);
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
       onClick={() => {
         setShowIvoryLabels(!showIvoryLabels);
       }}
     >
-      {`${showIvoryLabels ? 'hide' : 'show'} labels on keys`}
-    </button>
+      {`${showIvoryLabels ? 'hide' : 'show'} labels`}
+    </Button>
   );
 }
 
@@ -23,14 +24,14 @@ export function OnlyInKeyButton() {
   if (!showIvoryLabels) return null;
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="outline"
       onClick={() => {
         setOnlyInKey(!onlyInKey);
       }}
     >
       {onlyInKey ? 'all keys' : 'only in scale'}
-    </button>
+    </Button>
   );
 }
 
@@ -41,8 +42,20 @@ export function OctavesControls() {
     <div className="octaves-controls">
       {/* eslint-disable-next-line */}
       <label> number of octaves: {octaves} </label>
-      <button type="button" onClick={increaseOctaves}>+</button>
-      <button type="button" onClick={decreaseOctaves}>-</button>
+      <Button
+        size="sm"
+        variant="secondary"
+        onClick={increaseOctaves}
+      >
+        +
+      </Button>
+      <Button
+        size="sm"
+        variant="destructive"
+        onClick={decreaseOctaves}
+      >
+        -
+      </Button>
     </div>
   );
 }
@@ -53,34 +66,35 @@ export function TonalityControls() {
   } = useContext(SettingsContext);
 
   return (
-    <div className="tonality-controls">
-      <h3>tonality</h3>
-      {Object.entries(TONALITY).map(([t, label]) => (
-        <button
-          type="button"
-          key={label}
-          className={tonality === label ? 'active' : ''}
+    <div className="tonality-controls mb-8">
+      <h3 className="mb-2">tonality</h3>
+      <div className="flex items-center gap-2 justify-center">
+        {Object.entries(TONALITY).map(([t, label]) => (
+          <Button
+            key={label}
+            variant={tonality === label ? 'selected' : 'default'}
+            onClick={() => {
+              setTonality(TONALITY[t as keyof typeof TONALITY]);
+            }}
+          >
+            {label}
+          </Button>
+        ))}
+        <Button
+          variant="outline"
           onClick={() => {
-            setTonality(TONALITY[t as keyof typeof TONALITY]);
+            if (tonality === TONALITY.MAJOR) {
+              setTonic(((tonic + 9) % 12) as any);
+              setTonality(TONALITY.MINOR_NATURAL);
+            } else {
+              setTonality(TONALITY.MAJOR);
+              setTonic(((tonic + 3) % 12) as any);
+            }
           }}
         >
-          {label}
-        </button>
-      ))}
-      <button
-        type="button"
-        onClick={() => {
-          if (tonality === TONALITY.MAJOR) {
-            setTonic(((tonic + 9) % 12) as any);
-            setTonality(TONALITY.MINOR_NATURAL);
-          } else {
-            setTonality(TONALITY.MAJOR);
-            setTonic(((tonic + 3) % 12) as any);
-          }
-        }}
-      >
-        go to relative {tonality === TONALITY.MAJOR ? 'minor' : 'major'}
-      </button>
+          {`go to relative ${tonality === TONALITY.MAJOR ? 'minor' : 'major'}`}
+        </Button>
+      </div>
     </div>
   );
 }

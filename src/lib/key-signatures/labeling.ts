@@ -21,6 +21,7 @@ import {
   noteLabels,
   accidentals,
   NoteLabel,
+  calculateDifference,
 } from '../core/primitives';
 import { TONALITY, naturalNotes, tonalityIntervals } from '../core/scales';
 import { wrapArray } from '../utils/array-utils';
@@ -103,7 +104,10 @@ export type KeySignatureAccidentalType = Exclude<
  * findBaseLetterAndAccidental(6, "FLAT")   // { base: "G", accidental: "♭" }
  *
  * // Natural notes work in any context
- * findBaseLetterAndAccidental(0, "SHARP")  // { base: "C", accidental: "" }
+ * findBaseLetterAndAccidental(0, "SHARP")  // { base: "B", accidental: "♯" }
+ *
+ * // Natural notes work in any context
+ * findBaseLetterAndAccidental(0, "NATURAL")  // { base: "C", accidental: "" }
  * ```
  */
 export function findBaseLetterAndAccidental(
@@ -139,55 +143,6 @@ export function findBaseLetterAndAccidental(
   }
 
   throw new Error(`Cannot find base letter for note ${note}`);
-}
-
-/**
- * Calculates the semitone difference between an actual note and its natural letter position.
- *
- * This function handles the modular arithmetic needed for cross-octave calculations,
- * ensuring that differences are calculated correctly even when notes wrap around
- * the 12-tone chromatic system.
- *
- * The difference indicates what accidental is needed:
- * - 0: Natural (no accidental needed)
- * - +1: Sharp needed
- * - -1: Flat needed
- * - +2: Double sharp needed
- * - -2: Double flat needed
- *
- * @param actualNote - The target note number (0-11)
- * @param naturalNote - The natural note number for the base letter
- * @returns Semitone difference (-2 to +2)
- *
- * @example
- * ```typescript
- * // F# (6) vs natural F (5): needs sharp
- * calculateDifference(6, 5)   // +1 (sharp)
- *
- * // Gb (6) vs natural G (7): needs flat
- * calculateDifference(6, 7)   // -1 (flat)
- *
- * // C (0) vs natural C (0): no accidental
- * calculateDifference(0, 0)   // 0 (natural)
- *
- * // Cross-octave example: B (11) vs C (0)
- * calculateDifference(11, 0)  // -1 (flat, for Cb)
- * ```
- */
-export function calculateDifference(
-  actualNote: Note,
-  naturalNote: Note,
-): number {
-  let difference = actualNote - naturalNote;
-
-  // Handle cross-octave wrapping: ensure difference is in range [-2, +2]
-  if (difference > 2) {
-    difference = (difference - 12) % 12;
-  } else if (difference < -2) {
-    difference = (difference + 12) % 12;
-  }
-
-  return difference;
 }
 
 /**
@@ -254,6 +209,46 @@ export function getAccidentalSymbol(
   if (difference === -2) return accidentals.DOUBLE_FLAT;
 
   throw new Error(`Unsupported accidental difference: ${difference}`);
+}
+
+/**
+ * Generates proper note labels for a scale considering key signature and tonality.
+ *
+ * This function implements complex music theory rules for:
+ * - Enharmonic spelling (F# vs Gb)
+ * - Scale degree alterations (raised 7th in harmonic minor)
+ * - Consistent letter name usage (no skipped letters)
+ * - Natural sign placement in minor keys
+ *
+ * @param scaleNotes - The numeric notes of the scale (0-11)
+ * @param tonic - The root note of the key
+ * @param accidentalType - Sharp/flat preference for this key
+ * @param tonality - Scale type (affects accidental placement)
+ * @returns Array of properly formatted note labels
+ *
+ * @example
+ * ```typescript
+ * // F# major scale notes: [6, 8, 10, 11, 1, 3, 5]
+ * calculateScaleLabels([6, 8, 10, 11, 1, 3, 5], 6, "SHARP", TONALITY.MAJOR)
+ * // Returns: ["F♯", "G♯", "A♯", "B", "C♯", "D♯", "E♯"]
+ * ```
+ */
+export function calculateScaleLabels(
+  scaleNotes: Note[],
+  tonic: Note,
+  accidentalType: KeySignatureAccidentalType,
+  tonality: TONALITY,
+): NoteLabel[] {
+  const tonicInfo = findBaseLetterAndAccidental(tonic, accidentalType);
+  const baseLetters = getBaseLetters(tonicInfo.base);
+
+  return scaleNotes.map((note, i) => {
+    const baseLetter = baseLetters[i];
+    const naturalNote = labelToNote(baseLetter);
+    const difference = calculateDifference(note, naturalNote);
+    const accidental = getAccidentalSymbol(difference, tonality, i);
+    return `${baseLetter}${accidental}` as NoteLabel;
+  });
 }
 
 /**

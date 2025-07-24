@@ -26,6 +26,8 @@ import { CHORD_TYPE, TONALITY_DIATONIC_CHORD_ORDER } from '../core/chords';
  * ```
  */
 const CHORD_TYPE_SUFFIX_MAP = {
+  M: '',
+  m: '',
   /** Diminished chord symbol */
   d: '°',
   /** Augmented chord symbol */
@@ -40,7 +42,13 @@ const CHORD_TYPE_SUFFIX_MAP = {
   dm7: '𐞢⁷',
   /** Fully diminished seventh chord symbol */
   d7: '°⁷',
-} as const;
+  /** Augmented major seventh chord symbol */
+  '+maj7': '+ᴹ⁷',
+  /** Augmented dominant seventh chord symbol */
+  '+7': '+⁷',
+  /** Minor-major seventh chord symbol */
+  mM7: 'ᴹ⁷',
+} as const satisfies Record<CHORD_TYPE, string>;
 
 /**
  * Union type of all chord quality symbols used in Roman numeral notation.
@@ -124,15 +132,13 @@ function getTriadRomanNumeralsFromChordTypes(
     const baseNumeral = romanNumerals[index];
 
     // Uppercase for major, augmented, and seventh chords built on major triads
-    const numeral = chordType === 'M'
-      || chordType === '+'
-      || chordType === 'maj7'
-      || chordType === '7'
+    const numeral = ['M', '+', 'maj7', '7', '+maj7', '+7']
+      .some((predicate) => chordType === predicate)
       ? (baseNumeral.toUpperCase() as UpperRomanNumeral)
       : baseNumeral;
 
     // Add chord quality symbol if one exists for this chord type
-    return `${numeral}${CHORD_TYPE_SUFFIX_MAP[chordType] || ''}` as RomanNumeral;
+    return `${numeral}${CHORD_TYPE_SUFFIX_MAP[chordType]}` as RomanNumeral;
   });
 }
 

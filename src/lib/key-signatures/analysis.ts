@@ -123,8 +123,7 @@ export function buildDiatonicTriads(keySignature: KeySignature): Sequence[] {
   const scale = keySignature.scaleAscending;
   return scale.notes.map((root, i) => {
     const { chordTypes } = tonalityDiatonicChordsMap[keySignature.tonality];
-    const chordType = chordTypes[i];
-    const triad = buildChord(root, chordType);
+    const triad = buildChord(root, chordTypes[i]);
     const labels = generateChordLabels(triad, keySignature);
 
     return {

@@ -13,16 +13,10 @@
  */
 
 import {
-  Note, Sequence, NoteLabel, AccidentalName, circleOfFifths,
+  Note, Sequence, AccidentalName, circleOfFifths,
 } from '../core/primitives';
 import { TONALITY, NaturalNote, buildScale } from '../core/scales';
-import {
-  findBaseLetterAndAccidental,
-  getBaseLetters,
-  labelToNote,
-  calculateDifference,
-  getAccidentalSymbol,
-} from './labeling';
+import { calculateScaleLabels } from './labeling';
 
 /**
  * The order in which sharps appear in key signatures.
@@ -117,7 +111,7 @@ export interface KeySignature {
   accidentals: NaturalNote[];
   /** Whether this key signature uses sharps, flats, or naturals */
   accidentalType: KeySignatureAccidentalType;
-  /** The complete scale with proper note labels */
+  /** The ascending scale with proper note labels */
   scaleAscending: Sequence;
 }
 
@@ -192,46 +186,6 @@ function calculateAccidentalsList(
   }
 
   return [];
-}
-
-/**
- * Generates proper note labels for a scale considering key signature and tonality.
- *
- * This function implements complex music theory rules for:
- * - Enharmonic spelling (F# vs Gb)
- * - Scale degree alterations (raised 7th in harmonic minor)
- * - Consistent letter name usage (no skipped letters)
- * - Natural sign placement in minor keys
- *
- * @param scaleNotes - The numeric notes of the scale (0-11)
- * @param tonic - The root note of the key
- * @param accidentalType - Sharp/flat preference for this key
- * @param tonality - Scale type (affects accidental placement)
- * @returns Array of properly formatted note labels
- *
- * @example
- * ```typescript
- * // F# major scale notes: [6, 8, 10, 11, 1, 3, 5]
- * calculateScaleLabels([6, 8, 10, 11, 1, 3, 5], 6, "SHARP", TONALITY.MAJOR)
- * // Returns: ["F♯", "G♯", "A♯", "B", "C♯", "D♯", "E♯"]
- * ```
- */
-function calculateScaleLabels(
-  scaleNotes: Note[],
-  tonic: Note,
-  accidentalType: KeySignatureAccidentalType,
-  tonality: TONALITY,
-): NoteLabel[] {
-  const tonicInfo = findBaseLetterAndAccidental(tonic, accidentalType);
-  const baseLetters = getBaseLetters(tonicInfo.base);
-
-  return scaleNotes.map((note, i) => {
-    const baseLetter = baseLetters[i];
-    const naturalNote = labelToNote(baseLetter);
-    const difference = calculateDifference(note, naturalNote);
-    const accidental = getAccidentalSymbol(difference, tonality, i);
-    return `${baseLetter}${accidental}` as NoteLabel;
-  });
 }
 
 /**

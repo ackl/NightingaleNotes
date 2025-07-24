@@ -257,6 +257,55 @@ export function calculateInterval(note1: Note, note2: Note): number {
   return ((note2 - note1 + 12) % 12);
 }
 
+/**
+ * Calculates the semitone difference between an actual note and its natural letter position.
+ *
+ * This function handles the modular arithmetic needed for cross-octave calculations,
+ * ensuring that differences are calculated correctly even when notes wrap around
+ * the 12-tone chromatic system.
+ *
+ * The difference indicates what accidental is needed:
+ * - 0: Natural (no accidental needed)
+ * - +1: Sharp needed
+ * - -1: Flat needed
+ * - +2: Double sharp needed
+ * - -2: Double flat needed
+ *
+ * @param actualNote - The target note number (0-11)
+ * @param naturalNote - The natural note number for the base letter
+ * @returns Semitone difference (-2 to +2)
+ *
+ * @example
+ * ```typescript
+ * // F# (6) vs natural F (5): needs sharp
+ * calculateDifference(6, 5)   // +1 (sharp)
+ *
+ * // Gb (6) vs natural G (7): needs flat
+ * calculateDifference(6, 7)   // -1 (flat)
+ *
+ * // C (0) vs natural C (0): no accidental
+ * calculateDifference(0, 0)   // 0 (natural)
+ *
+ * // Cross-octave example: B (11) vs C (0)
+ * calculateDifference(11, 0)  // -1 (flat, for Cb)
+ * ```
+ */
+export function calculateDifference(
+  actualNote: Note,
+  naturalNote: Note,
+): number {
+  let difference = actualNote - naturalNote;
+
+  // Handle cross-octave wrapping: ensure difference is in range [-2, +2]
+  if (difference > 2) {
+    difference = (difference - 12) % 12;
+  } else if (difference < -2) {
+    difference = (difference + 12) % 12;
+  }
+
+  return difference;
+}
+
 export function generateSequenceNotes(sequence: Sequence) {
   const max = Math.max(...sequence.notes);
   const maxIdx = sequence.notes.indexOf(max as Note);

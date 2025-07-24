@@ -36,6 +36,9 @@ export function assertChordQuality(
     m7: { third: 3, fifth: 7 }, // Minor 7th (just checking triad part)
     dm7: { third: 3, fifth: 6 }, // Half-diminished 7th (just checking triad part)
     d7: { third: 3, fifth: 6 }, // Fully diminished 7th (just checking triad part)
+    '+maj7': { third: 4, fifth: 8 }, // Augmented major 7th (just checking triad part)
+    '+7': { third: 4, fifth: 8 }, // Augmented dominant 7th (just checking triad part)
+    mM7: { third: 3, fifth: 7 }, // Minor-major 7th (just checking triad part)
   };
 
   const expected = qualities[expectedQuality];

@@ -27,7 +27,7 @@ export enum TONALITY {
   /** Harmonic minor scale - exotic sound with raised 7th degree */
   MINOR_HARMONIC = 'Minor Harmonic',
   /** Melodic minor scale (ascending/jazz form) - smooth melodic motion */
-  MINOR_MELODIC = 'Minor Melodic (ascending/jazz)',
+  MINOR_MELODIC = 'Minor Melodic',
 }
 
 /**
@@ -115,7 +115,16 @@ export const diatonicDegreeNames = [
   'Tonic',
 ];
 
-export function buildScale(tonic: number, tonality: TONALITY): Note[] {
-  const intervals = tonalityIntervals[tonality];
-  return intervals.map((interval) => (tonic + interval) % 12 as Note);
+export function buildScale(tonic: number, tonality: TONALITY, ascending = true): Note[] {
+  let intervals = tonalityIntervals[tonality];
+
+  if (ascending) {
+    return intervals.map((interval) => (tonic + interval) % 12 as Note);
+  }
+
+  if (tonality === TONALITY.MINOR_MELODIC) {
+    intervals = tonalityIntervals[TONALITY.MINOR_NATURAL];
+  }
+
+  return intervals.reverse().map((interval) => (tonic + interval) % 12 as Note);
 }

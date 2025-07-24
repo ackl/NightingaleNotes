@@ -14,9 +14,11 @@
 
 import {
   Note, Sequence, AccidentalName, circleOfFifths,
+  NoteLabel,
 } from '../core/primitives';
 import { TONALITY, NaturalNote, buildScale } from '../core/scales';
 import { getScaleLabels } from './labeling';
+import { memoize } from '../utils/memoize';
 
 /**
  * The order in which sharps appear in key signatures.
@@ -105,6 +107,8 @@ type KeySignatureAccidentalType = Exclude<AccidentalName,
 export interface KeySignature {
   /** The root note of the key (0-11) */
   tonic: Note;
+  /** The label for the key's tonic */
+  tonicLabel: NoteLabel;
   /** The scale type (Major, Minor Natural, etc.) */
   tonality: TONALITY;
   /** Array of notes that have accidentals in this key signature */
@@ -214,9 +218,7 @@ function sortKeySignatures(keySignatures: KeySignature[]): KeySignature[] {
 }
 
 /**
- * Generates all possible key signatures for a given tonic and tonality.
- *
- * This is the main entry point for key signature calculation. It handles:
+ * This is the core key signature calculation logic. It handles:
  * - Circle of fifths positioning
  * - Relative major/minor relationships
  * - Enharmonic equivalent generation
@@ -238,7 +240,7 @@ function sortKeySignatures(keySignatures: KeySignature[]): KeySignature[] {
  *
  * @example
  * ```typescript
- * // C Major - no accidentals
+ * // C Major - no accidentals (cached after first call)
  * getKeySignatures(0, TONALITY.MAJOR)
  * // Returns: [{ tonic: 0, accidentals: [], accidentalType: "NATURAL", ... }]
  *
@@ -252,9 +254,8 @@ function sortKeySignatures(keySignatures: KeySignature[]): KeySignature[] {
  * // A Minor - relative to C Major
  * getKeySignatures(9, TONALITY.MINOR_NATURAL)
  * // Returns: [{ tonic: 9, accidentals: [], accidentalType: "NATURAL", ... }]
- * ```
  */
-export function getKeySignatures(
+function getKeySignaturesInternal(
   tonic: Note,
   tonality: TONALITY,
 ): KeySignature[] {
@@ -284,6 +285,7 @@ export function getKeySignatures(
 
     keySignatures.push({
       tonic,
+      tonicLabel: labels[0],
       tonality,
       accidentals: accidentalsList,
       accidentalType: type,
@@ -296,3 +298,14 @@ export function getKeySignatures(
 
   return sortKeySignatures(keySignatures);
 }
+
+/**
+ * Generates all possible key signatures for a given tonic and tonality (memoized).
+ *
+ * This is the main entry point for key signature calculation. Results are cached
+ * to improve performance when the same key signature is requested multiple times.
+ * This is particularly useful in UI contexts where key signatures are frequently
+ * recalculated for the same tonic/tonality combinations.
+ * ```
+ */
+export const getKeySignatures = memoize(getKeySignaturesInternal);

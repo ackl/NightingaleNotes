@@ -8,3 +8,4 @@ export * from './key-signatures/analysis';
 export * from './theory/roman-numerals';
 export * from './utils/array-utils';
 export * from './utils/throttle';
+export * from './utils/memoize';

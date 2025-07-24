@@ -2,6 +2,7 @@ import {
   useContext, useEffect, useRef,
 } from 'react';
 import {
+  getKeySignatures,
   getMajorKeyLabel,
   getMinorKeyLabel,
   Note,
@@ -21,6 +22,7 @@ import {
 } from './components/SettingsControls';
 import { DiatonicChords } from './components/DiatonicChords';
 import { Button } from './components/Button';
+import { X } from 'lucide-react';
 
 function App() {
   const {
@@ -89,9 +91,7 @@ function App() {
           >
             {notes.map((n) => (
               <option value={n} key={n}>
-                {tonality === TONALITY.MAJOR
-                  ? getMajorKeyLabel(n)
-                  : getMinorKeyLabel(n)}
+                {getKeySignatures(n, tonality)[0].tonicLabel}
               </option>
             ))}
           </select>
@@ -114,7 +114,12 @@ function App() {
           ))
           : null}
       </section>
-      <div className="orientation-hint">
+      <div className="orientation-hint opacity-50 p-8 block sm:hidden">
+        <X className="absolute top-2 right-2" onClick={() => {
+          const tip = document.querySelector('.orientation-hint');
+          tip?.classList.remove('block');
+          tip?.classList.add('hidden');
+        }} />
         <p>
           🔄 For the best piano experience, try rotating your device to
           landscape mode

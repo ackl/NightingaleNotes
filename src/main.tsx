@@ -7,7 +7,6 @@ import {
   AudioReactProvider,
   A11yProvider,
 } from './context';
-import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

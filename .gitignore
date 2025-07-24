@@ -24,3 +24,8 @@ coverage
 *.sln
 *.sw?
 
+.DS_Store
+*.log
+*.tmp
+.cache
+Thumbs.db

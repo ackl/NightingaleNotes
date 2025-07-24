@@ -63,10 +63,6 @@ export const Ivory = memo(
           triggerHaptic();
           await audioContextManager?.playTone(note + octave * 12);
         }}
-        onTouchStart={(e) => {
-          // iOS Safari sometimes needs touchstart to be explicitly handled
-          e.stopPropagation();
-        }}
       >
         <span className={`ivory-label ${showIvoryLabels && 'show'}`}>
           {onlyInKey ? isNoteInScale && noteLabel : noteLabel}

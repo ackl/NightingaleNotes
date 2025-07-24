@@ -9,9 +9,6 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'music-theory-engine': ['./src/lib'],
-          'audio-engine': ['./src/context/audio'],
-          abcjs: ['abcjs'],
           vendor: ['react', 'react-dom'],
         },
       },

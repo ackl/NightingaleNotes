@@ -1,4 +1,4 @@
-import { useEffect, useContext, useRef } from 'react';
+import { useContext, useRef } from 'react';
 import { NotesContext } from '../context';
 import { SHARP_ORDER, FLAT_ORDER } from '../lib/key-signatures/calculator';
 import { KeySignatureAccidentalType } from '../lib/key-signatures/labeling';
@@ -100,4 +100,3 @@ export function SimpleKeySignature() {
     />
   );
 }
-

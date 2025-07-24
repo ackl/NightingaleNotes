@@ -39,7 +39,6 @@ export interface ButtonProps
   VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   loading?: boolean;
-  selected?: boolean;
 }
 
 const BaseButton = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -65,7 +64,7 @@ BaseButton.displayName = 'Button';
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({
-    className, variant = 'default', size = 'default', selected, ...props
+    className, variant = 'default', size = 'default', ...props
   }, ref) => (
     <BaseButton
       ref={ref}

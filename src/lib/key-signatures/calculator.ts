@@ -16,7 +16,7 @@ import {
   Note, Sequence, AccidentalName, circleOfFifths,
 } from '../core/primitives';
 import { TONALITY, NaturalNote, buildScale } from '../core/scales';
-import { calculateScaleLabels } from './labeling';
+import { getScaleLabels } from './labeling';
 
 /**
  * The order in which sharps appear in key signatures.
@@ -280,7 +280,7 @@ export function getKeySignatures(
   // Generate key signature(s) for each accidental type
   for (const type of accidentalTypes) {
     const accidentalsList = calculateAccidentalsList(type, index);
-    const labels = calculateScaleLabels(scaleNotes, tonic, type, tonality);
+    const labels = getScaleLabels(scaleNotes, tonic, type, tonality);
 
     keySignatures.push({
       tonic,

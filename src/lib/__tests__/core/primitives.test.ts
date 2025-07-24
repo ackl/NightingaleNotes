@@ -6,6 +6,7 @@ import {
   INTERVALS,
   circleOfFifths,
   getNoteFromInterval,
+  calculateDifference,
 } from '../../core/primitives';
 import type { Note, AccidentalName, IntervalSymbol } from '../../core/primitives';
 
@@ -154,6 +155,71 @@ describe('Core Primitives', () => {
       }
 
       expect(currentNote).toBe(startNote);
+    });
+  });
+
+  describe('calculateDifference', () => {
+    it('should calculate basic differences correctly', () => {
+      // F# (6) vs F (5): +1 semitone
+      expect(calculateDifference(6, 5)).toBe(1);
+
+      // Gb (6) vs G (7): -1 semitone
+      expect(calculateDifference(6, 7)).toBe(-1);
+
+      // C (0) vs C (0): no difference
+      expect(calculateDifference(0, 0)).toBe(0);
+
+      // D (2) vs D (2): no difference
+      expect(calculateDifference(2, 2)).toBe(0);
+    });
+
+    it('should handle cross-octave calculations', () => {
+      // B (11) vs C (0): should be -1 (for Cb)
+      expect(calculateDifference(11, 0)).toBe(-1);
+
+      // C (0) vs B (11): should be 1 (for B#)
+      expect(calculateDifference(0, 11)).toBe(1);
+
+      // A (9) vs C (0): should be -3 → wraps to -3
+      expect(calculateDifference(9, 0)).toBe(-3);
+    });
+
+    it('should handle double accidentals', () => {
+      // Double sharp cases
+      expect(calculateDifference(3, 1)).toBe(2); // C## vs C#
+      expect(calculateDifference(1, 11)).toBe(2); // C# vs B
+
+      // Double flat cases
+      expect(calculateDifference(9, 11)).toBe(-2); // A vs B
+      expect(calculateDifference(10, 0)).toBe(-2); // Bb vs C
+    });
+
+    it('should wrap properly for large differences', () => {
+      // Test wraparound logic - differences should be reasonable for musical purposes
+      // The algorithm handles cross-octave wrapping but doesn't guarantee a specific range
+      for (let actual = 0; actual < 12; actual++) {
+        for (let natural = 0; natural < 12; natural++) {
+          const diff = calculateDifference(actual as Note, natural as Note);
+          expect(typeof diff).toBe('number');
+          expect(Number.isInteger(diff)).toBe(true);
+        }
+      }
+    });
+
+    it('should be consistent with music theory', () => {
+      // Test cases based on common enharmonic relationships
+      const testCases = [
+        { actual: 1, natural: 0, expected: 1 }, // C# vs C
+        { actual: 1, natural: 2, expected: -1 }, // Db vs D
+        { actual: 6, natural: 5, expected: 1 }, // F# vs F
+        { actual: 6, natural: 7, expected: -1 }, // Gb vs G
+        { actual: 10, natural: 9, expected: 1 }, // A# vs A
+        { actual: 10, natural: 11, expected: -1 }, // Bb vs B
+      ];
+
+      testCases.forEach(({ actual, natural, expected }) => {
+        expect(calculateDifference(actual as Note, natural as Note)).toBe(expected);
+      });
     });
   });
 

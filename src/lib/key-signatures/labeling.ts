@@ -229,11 +229,11 @@ export function getAccidentalSymbol(
  * @example
  * ```typescript
  * // F# major scale notes: [6, 8, 10, 11, 1, 3, 5]
- * calculateScaleLabels([6, 8, 10, 11, 1, 3, 5], 6, "SHARP", TONALITY.MAJOR)
+ * getScaleLabels([6, 8, 10, 11, 1, 3, 5], 6, "SHARP", TONALITY.MAJOR)
  * // Returns: ["F♯", "G♯", "A♯", "B", "C♯", "D♯", "E♯"]
  * ```
  */
-export function calculateScaleLabels(
+export function getScaleLabels(
   scaleNotes: Note[],
   tonic: Note,
   accidentalType: KeySignatureAccidentalType,

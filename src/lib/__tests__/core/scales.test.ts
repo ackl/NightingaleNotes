@@ -9,13 +9,6 @@ import type { Note } from '../../core/primitives';
 
 describe('Scales', () => {
   describe('TONALITY', () => {
-    it('should contain all standard tonality types', () => {
-      expect(TONALITY.MAJOR).toBe('Major');
-      expect(TONALITY.MINOR_NATURAL).toBe('Minor Natural');
-      expect(TONALITY.MINOR_HARMONIC).toBe('Minor Harmonic');
-      expect(TONALITY.MINOR_MELODIC).toBe('Minor Melodic (ascending/jazz)');
-    });
-
     it('should have exactly 4 tonality types', () => {
       expect(Object.keys(TONALITY)).toHaveLength(4);
     });

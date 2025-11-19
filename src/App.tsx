@@ -22,7 +22,6 @@ import {
 } from './components/SettingsControls';
 import { DiatonicChords } from './components/DiatonicChords';
 import { Button } from './components/Button';
-import { X } from 'lucide-react';
 
 function App() {
   const {

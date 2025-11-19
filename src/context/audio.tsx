@@ -9,6 +9,7 @@ import {
 import { SettingsContext } from './settings';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { AudioContextManager } from '../lib/utils/audioContextManager';
+import { charToNoteMap } from '../lib';
 
 export interface AudioContextState {
   audioContextManager: AudioContextManager | null;
@@ -23,7 +24,7 @@ export const AudioReactContext = createContext<AudioContextState>(
 );
 
 export function AudioReactProvider({ children }: { children: ReactNode }) {
-  const { octaves } = useContext(SettingsContext);
+  const { octaves, octaveForMusicalKeyboard } = useContext(SettingsContext);
 
   const [audioContextManager, setAudioContextManager] = useState<AudioContextManager | null>(
     initialAudioContextState.audioContextManager,
@@ -38,6 +39,21 @@ export function AudioReactProvider({ children }: { children: ReactNode }) {
     init();
   }, []);
 
+  useEffect(() => {
+    function handleKeyPress(ev: KeyboardEvent) {
+      if (charToNoteMap[ev['key'].toLowerCase() as keyof typeof charToNoteMap] !== undefined) {
+        const note = charToNoteMap[ev['key'] as keyof typeof charToNoteMap];
+        console.log('note is ', note, 'octave is ', octaveForMusicalKeyboard);
+        audioContextManager?.playTone(note);
+      }
+    }
+
+    if (audioContextManager) {
+      document.addEventListener('keydown', handleKeyPress);
+    }
+
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [audioContextManager]);
   // Load additional samples when octave range changes
   useEffect(() => {
     if (audioContextManager && octaves > 2) {

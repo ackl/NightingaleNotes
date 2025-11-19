@@ -351,13 +351,13 @@ describe('Throttle Utility', () => {
       expect(resizeHandler).toHaveBeenCalledOnce();
     });
 
-    it('should work for API call throttling', () => {
+    it('should work for API call throttling', async () => {
       const apiCall = vi.fn(async (query: string) => `Results for: ${query}`);
       const throttledApiCall = throttle(apiCall, 300);
 
       const result = throttledApiCall('test query');
 
-      expect(result).resolves.toBe('Results for: test query');
+      await expect(result).resolves.toBe('Results for: test query');
       expect(apiCall).toHaveBeenCalledWith('test query');
 
       // Rapid API calls should be throttled

@@ -1,14 +1,12 @@
 import {
   useContext, useEffect, useRef,
 } from 'react';
+import { X } from 'lucide-react';
 import {
   getKeySignatures,
-  getMajorKeyLabel,
-  getMinorKeyLabel,
   Note,
   notes,
   throttle,
-  TONALITY,
 } from './lib';
 import './App.css';
 import { AudioReactContext, NotesContext, SettingsContext } from './context';
@@ -22,7 +20,6 @@ import {
 } from './components/SettingsControls';
 import { DiatonicChords } from './components/DiatonicChords';
 import { Button } from './components/Button';
-import { X } from 'lucide-react';
 
 function App() {
   const {

@@ -4,9 +4,11 @@ import {
   labelToNote,
   findBaseLetterAndAccidental,
   getAccidentalSymbol,
+} from '../../key-signatures/labeling';
+import {
   getMajorKeyLabel,
   getMinorKeyLabel,
-} from '../../key-signatures/labeling';
+} from '../../key-signatures/calculator';
 import {
   type Note, type NoteLabelBase, noteLabels,
 } from '../../core/primitives';

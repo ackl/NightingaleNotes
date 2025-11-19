@@ -1,7 +1,7 @@
 import { memo, useContext, useMemo } from 'react';
 import { useHaptic } from 'use-haptic';
 import { NotesContext, SettingsContext, AudioReactContext } from '../context';
-import { naturalNotes } from '../lib';
+import { naturalNotes, getChromaticNoteLabels } from '../lib';
 import type { NaturalNote, Note } from '../lib';
 
 export const Ivory = memo(
@@ -12,7 +12,7 @@ export const Ivory = memo(
     } = useContext(SettingsContext);
     const {
       chord,
-      keySignature: { scaleAscending: scale },
+      keySignature: { scaleAscending: scale, accidentalType },
     } = useContext(NotesContext);
     const { audioContextManager } = useContext(AudioReactContext);
     const { triggerHaptic } = useHaptic();
@@ -29,12 +29,13 @@ export const Ivory = memo(
       return null;
     }
 
-    const isNoteInScale = scale.notes.includes(note);
-    const noteLabel = isNoteInScale ? getNoteLabelFromScale() : 'TODO';
+    const chromaticLabels = useMemo(
+      () => getChromaticNoteLabels(accidentalType),
+      [accidentalType],
+    );
 
-    // if (note === 0 && (noteLabel === 'TODO' || !noteLabel)) {
-    //   noteLabel = scale.labels[scale.labels.length - 1];
-    // }
+    const isNoteInScale = scale.notes.includes(note);
+    const noteLabel = isNoteInScale ? getNoteLabelFromScale() : chromaticLabels[note];
 
     let isHighlight = true;
 

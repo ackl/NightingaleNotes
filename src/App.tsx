@@ -114,11 +114,6 @@ function App() {
           : null}
       </section>
       <div className="orientation-hint opacity-50 p-8 block sm:hidden">
-        <X className="absolute top-2 right-2" onClick={() => {
-          const tip = document.querySelector('.orientation-hint');
-          tip?.classList.remove('block');
-          tip?.classList.add('hidden');
-        }} />
         <p>
           🔄 For the best piano experience, try rotating your device to
           landscape mode

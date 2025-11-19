@@ -6,6 +6,7 @@ import {
   getAccidentalSymbol,
   getMajorKeyLabel,
   getMinorKeyLabel,
+  getChromaticNoteLabels,
 } from '../../key-signatures/labeling';
 import {
   type Note, type NoteLabelBase, noteLabels,
@@ -452,6 +453,99 @@ describe('Key Signature Labeling', () => {
         expect(majorLabel.length).toBeGreaterThan(0);
         expect(minorLabel.length).toBeGreaterThan(0);
       }
+    });
+  });
+
+  describe('getChromaticNoteLabels', () => {
+    it('should return 12 note labels', () => {
+      const sharps = getChromaticNoteLabels('SHARP');
+      const flats = getChromaticNoteLabels('FLAT');
+      const naturals = getChromaticNoteLabels('NATURAL');
+
+      expect(sharps).toHaveLength(12);
+      expect(flats).toHaveLength(12);
+      expect(naturals).toHaveLength(12);
+    });
+
+    it('should use sharps for sharp key context', () => {
+      const labels = getChromaticNoteLabels('SHARP');
+
+      // C, C#, D, D#, E, F, F#, G, G#, A, A#, B
+      expect(labels[0]).toBe('C');
+      expect(labels[1]).toBe('C♯');
+      expect(labels[2]).toBe('D');
+      expect(labels[3]).toBe('D♯');
+      expect(labels[4]).toBe('E');
+      expect(labels[5]).toBe('F');
+      expect(labels[6]).toBe('F♯');
+      expect(labels[7]).toBe('G');
+      expect(labels[8]).toBe('G♯');
+      expect(labels[9]).toBe('A');
+      expect(labels[10]).toBe('A♯');
+      expect(labels[11]).toBe('B');
+    });
+
+    it('should use flats for flat key context', () => {
+      const labels = getChromaticNoteLabels('FLAT');
+
+      // C, Db, D, Eb, E, F, Gb, G, Ab, A, Bb, B
+      expect(labels[0]).toBe('C');
+      expect(labels[1]).toBe('D♭');
+      expect(labels[2]).toBe('D');
+      expect(labels[3]).toBe('E♭');
+      expect(labels[4]).toBe('E');
+      expect(labels[5]).toBe('F');
+      expect(labels[6]).toBe('G♭');
+      expect(labels[7]).toBe('G');
+      expect(labels[8]).toBe('A♭');
+      expect(labels[9]).toBe('A');
+      expect(labels[10]).toBe('B♭');
+      expect(labels[11]).toBe('B');
+    });
+
+    it('should use sharps for natural key context (C major)', () => {
+      const labels = getChromaticNoteLabels('NATURAL');
+
+      // Should default to sharp notation like C major
+      expect(labels[1]).toBe('C♯');
+      expect(labels[3]).toBe('D♯');
+      expect(labels[6]).toBe('F♯');
+      expect(labels[8]).toBe('G♯');
+      expect(labels[10]).toBe('A♯');
+    });
+
+    it('should have all unique base letters represented', () => {
+      const sharps = getChromaticNoteLabels('SHARP');
+      const flats = getChromaticNoteLabels('FLAT');
+
+      // Extract base letters (first character of each label)
+      const sharpBases = sharps.map((label: string) => label[0]);
+      const flatBases = flats.map((label: string) => label[0]);
+
+      // Should have representation of all 7 note letters
+      const expectedLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+      expectedLetters.forEach((letter) => {
+        expect(sharpBases).toContain(letter);
+        expect(flatBases).toContain(letter);
+      });
+    });
+
+    it('should return consistent labels for each accidental type', () => {
+      const sharps = getChromaticNoteLabels('SHARP');
+      const flats = getChromaticNoteLabels('FLAT');
+      const naturals = getChromaticNoteLabels('NATURAL');
+
+      // Sharp and natural should be the same (both use sharp notation)
+      expect(sharps).toEqual(naturals);
+
+      // All should have the same natural notes
+      expect(sharps[0]).toBe(flats[0]); // C
+      expect(sharps[2]).toBe(flats[2]); // D
+      expect(sharps[4]).toBe(flats[4]); // E
+      expect(sharps[5]).toBe(flats[5]); // F
+      expect(sharps[7]).toBe(flats[7]); // G
+      expect(sharps[9]).toBe(flats[9]); // A
+      expect(sharps[11]).toBe(flats[11]); // B
     });
   });
 });

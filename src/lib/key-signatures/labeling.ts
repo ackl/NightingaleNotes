@@ -295,3 +295,56 @@ export function getMinorKeyLabel(note: Note): NoteLabel {
   const keySignatures = getKeySignatures(note, TONALITY.MINOR_NATURAL);
   return keySignatures[0].scaleAscending.labels[0];
 }
+
+/**
+ * Generates labels for all 12 chromatic notes based on a key signature's accidental type.
+ *
+ * This function creates a complete chromatic scale with proper enharmonic spelling
+ * consistent with the given key signature. Notes are labeled according to the
+ * accidental preference of the key (sharps, flats, or naturals).
+ *
+ * For natural notes (white keys), the natural name is always used (C, D, E, F, G, A, B).
+ * For chromatic notes (black keys):
+ * - In sharp keys: uses sharp notation (C♯, D♯, F♯, G♯, A♯)
+ * - In flat keys: uses flat notation (D♭, E♭, G♭, A♭, B♭)
+ * - In natural keys (C major): defaults to sharp notation
+ *
+ * @param accidentalType - The accidental type from the key signature
+ * @returns Array of 12 note labels representing the complete chromatic scale (C through B)
+ *
+ * @example
+ * ```typescript
+ * // In a sharp key (G major):
+ * getChromaticNoteLabels("SHARP")
+ * // ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"]
+ *
+ * // In a flat key (F major):
+ * getChromaticNoteLabels("FLAT")
+ * // ["C", "D♭", "D", "E♭", "E", "F", "G♭", "G", "A♭", "A", "B♭", "B"]
+ *
+ * // In C major (no accidentals):
+ * getChromaticNoteLabels("NATURAL")
+ * // ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"]
+ * ```
+ */
+export function getChromaticNoteLabels(
+  accidentalType: KeySignatureAccidentalType,
+): NoteLabel[] {
+  // Map of note numbers to their labels for sharp and flat contexts
+  // Natural notes (0,2,4,5,7,9,11) always use natural names
+  // Chromatic notes (1,3,6,8,10) vary by context
+  const sharpLabels: NoteLabel[] = [
+    'C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B',
+  ];
+
+  const flatLabels: NoteLabel[] = [
+    'C', 'D♭', 'D', 'E♭', 'E', 'F', 'G♭', 'G', 'A♭', 'A', 'B♭', 'B',
+  ];
+
+  // Natural key context (C major) uses sharp notation for chromatic notes
+  if (accidentalType === 'NATURAL' || accidentalType === 'SHARP') {
+    return sharpLabels;
+  }
+
+  return flatLabels;
+}

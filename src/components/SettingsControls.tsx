@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { SettingsContext } from '../context/settings';
-import { TONALITY } from '../lib';
+import { TONALITY, Note } from '../lib';
 import { Button } from './Button';
 
 export function ShowHideButton() {
@@ -84,11 +84,11 @@ export function TonalityControls() {
           variant="outline"
           onClick={() => {
             if (tonality === TONALITY.MAJOR) {
-              setTonic(((tonic + 9) % 12) as any);
+              setTonic(((tonic + 9) % 12) as Note);
               setTonality(TONALITY.MINOR_NATURAL);
             } else {
               setTonality(TONALITY.MAJOR);
-              setTonic(((tonic + 3) % 12) as any);
+              setTonic(((tonic + 3) % 12) as Note);
             }
           }}
         >

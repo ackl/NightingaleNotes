@@ -17,6 +17,7 @@ import {
   NoteLabel,
 } from '../core/primitives';
 import { TONALITY, NaturalNote, buildScale } from '../core/scales';
+// eslint-disable-next-line
 import { getScaleLabels } from './labeling';
 import { memoize } from '../utils/memoize';
 

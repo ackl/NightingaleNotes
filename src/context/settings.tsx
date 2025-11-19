@@ -46,7 +46,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [onlyInKey, setOnlyInKey] = useState(initialSettingsState.onlyInKey);
   const [octaves, setOctaves] = useState(initialSettingsState.octaves);
   const [octaveForMusicalKeyboard, setOctaveForMusicalKeyboard] = useState(
-    initialSettingsState.octaveForMusicalKeyboard
+    initialSettingsState.octaveForMusicalKeyboard,
   );
   const [tonality, setTonality] = useState<TONALITY>(initialSettingsState.tonality);
   const [tonic, setTonic] = useState<Note>(0);

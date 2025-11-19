@@ -54,10 +54,13 @@ export default [
   {
     name: 'custom',
     rules: {
+      '@stylistic/max-len': ['error', { code: 120 }],
+      '@typescript-eslint/no-use-before-define': 0,
       'react/react-in-jsx-scope': 0,
       'react/jsx-uses-react': 0,
       'react/require-default-props': 0,
       'import-x/prefer-default-export': 0,
+      'import-x/no-duplicates': 0,
       'no-plusplus': 0,
       '@typescript-eslint/naming-convention': 0,
       'no-console': ["error", { allow: ["warn", "error", "debug"] }],

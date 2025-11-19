@@ -54,7 +54,7 @@ export function NotesProvider({ children }: { children: ReactNode }) {
   }, [tonic, tonality]);
 
   const keySignature = keySignatures[chosenKeySigIdx];
-  const diatonicChords = buildDiatonicTriads(tonic, tonality);
+  const diatonicChords = buildDiatonicTriads(keySignature);
   const chord = diatonicChords && diatonicChordRoot !== undefined
     ? diatonicChords[diatonicChordRoot]
     : undefined;

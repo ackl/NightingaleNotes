@@ -76,7 +76,7 @@ expect.extend({
     if (!Array.isArray(received) || !Array.isArray(expected)) {
       return {
         pass: false,
-        /* eslint-disable */
+
         message: () => `expected both arguments to be arrays, got ${typeof received} and ${typeof expected}`,
       };
     }
@@ -85,7 +85,7 @@ expect.extend({
       return {
         pass: false,
         message: () => `expected chords to have same length, got ${received.length} and ${expected.length}`,
-        /* eslint-enable */
+
       };
     }
 

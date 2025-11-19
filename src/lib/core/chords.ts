@@ -6,7 +6,7 @@
  */
 
 import { Note, INTERVALS, getNoteFromInterval } from './primitives';
-import { TONALITY, tonalityIntervals, buildScale } from './scales';
+import { TONALITY, buildScale } from './scales';
 import { wrapArray } from '../utils/array-utils';
 
 /**

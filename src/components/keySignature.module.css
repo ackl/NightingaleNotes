@@ -1,0 +1,26 @@
+.keySignatureContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  margin: 1.5rem 0;
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.key-signature {
+  border-radius: 1.5rem;
+  background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(200,200,255,0.10) 100%);
+  box-shadow: 0 4px 24px 0 rgba(31, 38, 135, 0.12);
+  padding: 1.5rem;
+  margin: 0;
+  transition: box-shadow 0.2s;
+}
+
+.key-signature:hover {
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.22);
+}

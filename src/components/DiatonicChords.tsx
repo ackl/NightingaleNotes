@@ -16,7 +16,7 @@ export function DiatonicChords() {
   return (
     <>
       <div className="diatonic-chords">
-        <h3 className="mb-2">diatonic triads</h3>
+        <h3 className="m-4 uppercase font-black">diatonic triads</h3>
         <div className="flex items-center gap-2 justify-center">
           {romanNumerals.map((label, i) => (
             <Button
@@ -37,7 +37,7 @@ export function DiatonicChords() {
           ))}
         </div>
       </div>
-      <p className="degree-name">
+      <p className="degree-name mt-2 text-center text-sm italic">
         {diatonicChordRoot !== undefined
           && diatonicDegreeNames[diatonicChordRoot]}
       </p>

@@ -72,7 +72,7 @@ function App() {
       }} />
       <section className="play-button">
         <Button
-          className="play"
+          className="play outline ghost"
           onClick={() => audioContextManager?.playNotes(chord
             || keySignature.scaleAscending, octaves)}
         >

@@ -25,7 +25,7 @@ export function OnlyInKeyButton() {
 
   return (
     <Button
-      variant="outline"
+      variant="ghost"
       onClick={() => {
         setOnlyInKey(!onlyInKey);
       }}
@@ -67,7 +67,7 @@ export function TonalityControls() {
 
   return (
     <div className="tonality-controls mb-8">
-      <h3 className="mb-2">tonality</h3>
+      <h3 className="m-4 uppercase font-black">tonality</h3>
       <div className="flex items-center gap-2 justify-center">
         {Object.entries(TONALITY).map(([t, label]) => (
           <Button

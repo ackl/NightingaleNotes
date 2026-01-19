@@ -16,17 +16,17 @@ const commonAccidentalPositions: Record<NaturalNote, number> = {
 
 const TREBLE_CLEF_POSITIONS: Record<Exclude<KeySignatureAccidentalType, 'NATURAL'>,
   Record<NaturalNote, number>> = {
-    SHARP: {
-      ...commonAccidentalPositions,
-      5: 20, // F
-      7: 15, // G
-    },
-    FLAT: {
-      ...commonAccidentalPositions,
-      7: 50, // G
-      5: 55, // F
-    },
-  };
+  SHARP: {
+    ...commonAccidentalPositions,
+    5: 20, // F
+    7: 15, // G
+  },
+  FLAT: {
+    ...commonAccidentalPositions,
+    7: 50, // G
+    5: 55, // F
+  },
+};
 
 // Get staff position for a note number
 function getStaffPosition(note: number, accidentalType: KeySignatureAccidentalType): number {
@@ -34,6 +34,8 @@ function getStaffPosition(note: number, accidentalType: KeySignatureAccidentalTy
 }
 
 export function KeySignature() {
+
+
   const { keySignature } = useContext(NotesContext);
   const svgRef = useRef<SVGSVGElement>(null);
 

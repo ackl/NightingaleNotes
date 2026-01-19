@@ -3,7 +3,7 @@ import { SettingsContext } from '../context';
 import { Octave } from './octave';
 
 export function Keyboard() {
-  const { octaves, octaveForMusicalKeyboard } = useContext(SettingsContext);
+  const { octaves } = useContext(SettingsContext);
 
   const els: ReactElement[] = [];
   for (let i = 0; i < octaves; i++) {
@@ -15,7 +15,6 @@ export function Keyboard() {
       <section className="keyboard perspective-shift">
         {els.map((el) => el)}
       </section>
-      <p>keyboard {octaveForMusicalKeyboard}</p>
     </div>
   );
 }

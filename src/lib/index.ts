@@ -12,6 +12,7 @@ export * from './core/scales';
 export * from './core/chords';
 export * from './key-signatures/calculator';
 export * from './key-signatures/labeling';
+export * from './key-signatures/key-signature-core';
 export * from './key-signatures/analysis';
 export * from './theory/roman-numerals';
 export * from './utils/array-utils';

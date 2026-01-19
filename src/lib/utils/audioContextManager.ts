@@ -127,8 +127,8 @@ export class AudioContextManager {
         $el?.classList.add('flash');
         setTimeout(() => {
           $el?.classList.remove('flash');
-        }, 600);
-      }, when * 1000);
+        }, 1000);
+      }, when * 1200);
 
       source.connect(gainNode);
       gainNode.connect(this.ctx.destination);

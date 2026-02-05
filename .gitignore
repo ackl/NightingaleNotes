@@ -29,3 +29,22 @@ coverage
 *.tmp
 .cache
 Thumbs.db
+
+# NightingaleNotes-iOS/.build/**
+.AppleDouble
+.LSOverride
+# Thumbnails and Trashes
+Icon?
+.Trashes
+# macOS resource fork files
+._*
+# macOS Finder settings files
+.Spotlight-V100
+.fseventsd
+# Network storage files
+.SMBDeleteFile*
+# Xcode build folders
+**/.build/**
+**.xcodeproj/
+**.xcworkspace/
+xcuserdata/

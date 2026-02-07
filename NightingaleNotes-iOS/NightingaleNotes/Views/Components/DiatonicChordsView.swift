@@ -4,35 +4,32 @@ import SwiftUI
 struct DiatonicChordsView: View {
     @Bindable var notes: NotesViewModel
     let settings: SettingsViewModel
-    
+    let compactLayout: Bool
+
+    init(notes: NotesViewModel, settings: SettingsViewModel, compactLayout: Bool = false) {
+        self.notes = notes
+        self.settings = settings
+        self.compactLayout = compactLayout
+    }
+
     var body: some View {
         VStack(spacing: 12) {
             Text("Diatonic Chords")
                 .font(.headline)
                 .foregroundColor(.secondary)
-            
-            HStack(spacing: 8) {
-                ForEach(0..<7, id: \.self) { degree in
-                    ChordButton(
-                        degree: degree,
-                        romanNumeral: notes.chordLabel(for: degree),
-                        chordName: notes.fullChordName(for: degree),
-                        isSelected: notes.selectedChordDegree == degree,
-                        onTap: {
-                            notes.selectChord(degree: degree)
-                        },
-                        onDoubleTap: {
-                            notes.selectChord(degree: degree)
-                            notes.playCurrentChord(octave: settings.baseOctave)
-                        }
-                    )
+
+            if compactLayout {
+                LazyVGrid(columns: compactColumns, spacing: 8) {
+                    chordButtons
+                }
+            } else {
+                HStack(spacing: 8) {
+                    chordButtons
                 }
             }
-            
-            // Play Chord and Clear Chord buttons
+
             if notes.selectedChordDegree != nil {
                 HStack(spacing: 12) {
-                    // Play Chord button
                     Button(action: {
                         notes.playCurrentChord(octave: settings.baseOctave)
                     }) {
@@ -47,8 +44,7 @@ struct DiatonicChordsView: View {
                         .cornerRadius(8)
                     }
                     .buttonStyle(.plain)
-                    
-                    // Clear Chord button
+
                     Button(action: {
                         notes.clearChord()
                     }) {
@@ -68,6 +64,30 @@ struct DiatonicChordsView: View {
         }
         .padding()
     }
+
+    private var compactColumns: [GridItem] {
+        Array(repeating: GridItem(.flexible(minimum: 54), spacing: 8), count: 4)
+    }
+
+    @ViewBuilder
+    private var chordButtons: some View {
+        ForEach(0..<7, id: \.self) { degree in
+            ChordButton(
+                degree: degree,
+                romanNumeral: notes.chordLabel(for: degree),
+                chordName: notes.fullChordName(for: degree),
+                isSelected: notes.selectedChordDegree == degree,
+                compactLayout: compactLayout,
+                onTap: {
+                    notes.selectChord(degree: degree)
+                },
+                onDoubleTap: {
+                    notes.selectChord(degree: degree)
+                    notes.playCurrentChord(octave: settings.baseOctave)
+                }
+            )
+        }
+    }
 }
 
 /// Individual chord button
@@ -76,19 +96,23 @@ struct ChordButton: View {
     let romanNumeral: String
     let chordName: String
     let isSelected: Bool
+    let compactLayout: Bool
     let onTap: () -> Void
     let onDoubleTap: () -> Void
-    
+
     var body: some View {
         Button(action: onTap) {
             VStack(spacing: 4) {
                 Text(romanNumeral)
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: compactLayout ? 16 : 18, weight: .semibold))
                 Text(chordName)
-                    .font(.system(size: 10))
+                    .font(.system(size: compactLayout ? 9 : 10))
                     .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
-            .frame(width: 44, height: 60)
+            .frame(maxWidth: compactLayout ? .infinity : 44, minHeight: compactLayout ? 54 : 60)
+            .padding(.horizontal, compactLayout ? 4 : 0)
             .background(isSelected ? Color.accentColor : Color.gray.opacity(0.2))
             .foregroundColor(isSelected ? .white : .primary)
             .cornerRadius(8)
@@ -105,6 +129,6 @@ struct ChordButton: View {
 #Preview {
     let settings = SettingsViewModel()
     let notes = NotesViewModel(settings: settings)
-    
-    return DiatonicChordsView(notes: notes, settings: settings)
+
+    return DiatonicChordsView(notes: notes, settings: settings, compactLayout: true)
 }

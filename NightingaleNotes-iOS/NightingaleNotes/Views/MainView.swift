@@ -4,35 +4,29 @@ import SwiftUI
 struct MainView: View {
     @State private var settings = SettingsViewModel()
     @State private var notes: NotesViewModel
-    
+
     init() {
         let settingsVM = SettingsViewModel()
         _settings = State(initialValue: settingsVM)
         _notes = State(initialValue: NotesViewModel(settings: settingsVM))
     }
-    
+
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                // Key Signature Display with Pickers
-                KeySignatureView(settings: settings)
-                    .frame(maxWidth: .infinity)
-                
-                // Diatonic Chords
-                DiatonicChordsView(notes: notes, settings: settings)
-                
-                // Piano Keyboard
-                KeyboardView(notes: notes, settings: settings)
-                    .frame(height: 200)
-                
-                Spacer(minLength: 40)
+        GeometryReader { geometry in
+            let isPortrait = geometry.size.height >= geometry.size.width
+
+            Group {
+                if isPortrait {
+                    portraitLayout(in: geometry.size)
+                } else {
+                    landscapeLayout(in: geometry.size)
+                }
             }
-            .padding(.top)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Menu {
-                    // Show Labels toggle
                     Button(action: {
                         settings.showLabels.toggle()
                     }) {
@@ -41,8 +35,7 @@ struct MainView: View {
                             systemImage: settings.showLabels ? "tag.slash" : "tag"
                         )
                     }
-                    
-                    // Only In Key toggle (only when showLabels is true)
+
                     if settings.showLabels {
                         Button(action: {
                             settings.onlyInKey.toggle()
@@ -53,18 +46,17 @@ struct MainView: View {
                             )
                         }
                     }
-                    
+
                     Divider()
-                    
-                    // Octaves controls
+
                     Text("Octaves: \(settings.octaves)")
-                    
+
                     Button(action: {
                         settings.increaseOctaves()
                     }) {
                         Label("Add Octave", systemImage: "plus")
                     }
-                    
+
                     Button(action: {
                         settings.decreaseOctaves()
                     }) {
@@ -76,10 +68,7 @@ struct MainView: View {
             }
         }
         .onAppear {
-            // Update notes view model reference when settings change
             notes.settings = settings
-            
-            // Prepare audio engine
             AudioEngine.shared.prepare()
         }
         .onChange(of: settings.tonic) { _, _ in
@@ -87,6 +76,56 @@ struct MainView: View {
         }
         .onChange(of: settings.tonality) { _, _ in
             notes.clearChord()
+        }
+    }
+
+    private func portraitLayout(in size: CGSize) -> some View {
+        let keyboardZoneHeight = max(280, size.height * 0.56)
+
+        return VStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 12) {
+                    KeySignatureView(settings: settings)
+                        .padding(.horizontal, 8)
+
+                    DiatonicChordsView(notes: notes, settings: settings, compactLayout: true)
+                        .padding(.horizontal, 8)
+                }
+                .padding(.top, 8)
+                .padding(.bottom, 12)
+            }
+
+            Divider()
+
+            VStack(spacing: 10) {
+                KeyboardView(notes: notes, settings: settings, compactSizing: true, showMinimap: true)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 8)
+            }
+            .frame(height: keyboardZoneHeight)
+            .background(Color.primary.opacity(0.03))
+        }
+    }
+
+    private func landscapeLayout(in size: CGSize) -> some View {
+        HStack(spacing: 0) {
+            ScrollView {
+                VStack(spacing: 12) {
+                    KeySignatureView(settings: settings)
+                    DiatonicChordsView(notes: notes, settings: settings, compactLayout: false)
+                }
+                .padding()
+            }
+            .frame(width: min(360, size.width * 0.4))
+
+            Divider()
+
+            VStack(spacing: 10) {
+                KeyboardView(notes: notes, settings: settings, compactSizing: false, showMinimap: false)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 10)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 }

@@ -85,7 +85,7 @@ struct MainView: View {
         return VStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 12) {
-                    KeySignatureView(settings: settings)
+                    KeySignatureView(settings: settings, notes: notes)
                         .padding(.horizontal, 8)
 
                     DiatonicChordsView(notes: notes, settings: settings, compactLayout: true)
@@ -111,7 +111,7 @@ struct MainView: View {
         HStack(spacing: 0) {
             ScrollView {
                 VStack(spacing: 12) {
-                    KeySignatureView(settings: settings)
+                    KeySignatureView(settings: settings, notes: notes)
                     DiatonicChordsView(notes: notes, settings: settings, compactLayout: false)
                 }
                 .padding()

@@ -16,6 +16,9 @@ public class AudioEngine {
     /// Player nodes for polyphonic playback
     private var playerNodes: [AVAudioPlayerNode] = []
     
+    /// Pitch shift units paired with each player node
+    private var pitchUnits: [AVAudioUnitTimePitch] = []
+    
     /// Maximum number of simultaneous voices
     private let maxVoices = 16
     
@@ -54,16 +57,26 @@ public class AudioEngine {
         #endif
     }
     
-    /// Set up the audio engine with player nodes
+    /// Set up the audio engine with player nodes and persistent pitch shift units
     private func setupAudioEngine() {
         let mainMixer = audioEngine.mainMixerNode
         
-        // Create player nodes for polyphony
+        // Create player nodes with dedicated pitch units for polyphony
+        // Each player has its own pitch shift unit - no reconnection needed
         for _ in 0..<maxVoices {
             let player = AVAudioPlayerNode()
+            let pitchUnit = AVAudioUnitTimePitch()
+            
             audioEngine.attach(player)
-            audioEngine.connect(player, to: mainMixer, format: nil)
+            audioEngine.attach(pitchUnit)
+            
+            // Connect: player -> pitchUnit -> mixer
+            // We'll set pitch to 0 when no shift is needed
+            audioEngine.connect(player, to: pitchUnit, format: nil)
+            audioEngine.connect(pitchUnit, to: mainMixer, format: nil)
+            
             playerNodes.append(player)
+            pitchUnits.append(pitchUnit)
         }
         
         do {
@@ -163,8 +176,10 @@ public class AudioEngine {
             return
         }
         
-        // Get next player (round-robin)
-        let player = playerNodes[currentPlayerIndex]
+        // Get next player and its paired pitch unit (round-robin)
+        let playerIndex = currentPlayerIndex
+        let player = playerNodes[playerIndex]
+        let pitchUnit = pitchUnits[playerIndex]
         currentPlayerIndex = (currentPlayerIndex + 1) % maxVoices
         
         // Stop any currently playing sound on this player
@@ -172,28 +187,13 @@ public class AudioEngine {
             player.stop()
         }
         
-        // Disconnect player from any previous nodes (mixer or pitch effect)
-        audioEngine.disconnectNodeOutput(player)
-        
-        // Create pitch shift effect if needed
-        if abs(pitchShift) > 0.1 {
-            // Apply time pitch effect
-            let timePitch = AVAudioUnitTimePitch()
-            timePitch.pitch = pitchShift
-            
-            // Connect through time pitch
-            audioEngine.attach(timePitch)
-            audioEngine.connect(player, to: timePitch, format: buffer.format)
-            audioEngine.connect(timePitch, to: audioEngine.mainMixerNode, format: buffer.format)
-        } else {
-            // Connect directly to mixer if no pitch shift needed
-            audioEngine.connect(player, to: audioEngine.mainMixerNode, format: buffer.format)
-        }
+        // Set pitch shift (0 if no shift needed)
+        pitchUnit.pitch = pitchShift
         
         // Set volume based on velocity
         player.volume = velocity
         
-        // Schedule and play
+        // Schedule and play immediately
         player.scheduleBuffer(buffer, at: nil, options: [], completionHandler: nil)
         player.play()
     }
@@ -207,6 +207,55 @@ public class AudioEngine {
         for note in notes {
             playNote(note, octave: octave, velocity: velocity)
         }
+    }
+    
+    /// Play notes sequentially (for scales/arpeggios) with precise timing
+    /// - Parameters:
+    ///   - notesWithOctaves: Array of tuples containing (note, octave) to play in sequence
+    ///   - interval: Time interval between notes in seconds (default 0.25)
+    ///   - velocity: Velocity (0.0 to 1.0)
+    ///   - onNotePlayed: Optional callback when each note is played, with the index
+    public func playSequence(
+        _ notesWithOctaves: [(note: Note, octave: Int)],
+        interval: TimeInterval = 0.25,
+        velocity: Float = 0.8,
+        onNotePlayed: ((Int) -> Void)? = nil
+    ) {
+        guard isReady, !notesWithOctaves.isEmpty else { return }
+        
+        var currentIndex = 0
+        let notes = notesWithOctaves
+        
+        // Create a precise timer on a high-priority queue
+        let timerQueue = DispatchQueue(label: "com.nightingale.sequencer", qos: .userInteractive)
+        let timer = DispatchSource.makeTimerSource(flags: .strict, queue: timerQueue)
+        
+        // Fire immediately for first note, then at regular intervals
+        timer.schedule(deadline: .now(), repeating: interval, leeway: .milliseconds(1))
+        
+        timer.setEventHandler { [weak self] in
+            guard let self = self, currentIndex < notes.count else {
+                timer.cancel()
+                return
+            }
+            
+            let noteInfo = notes[currentIndex]
+            let index = currentIndex
+            currentIndex += 1
+            
+            // Play note on main thread (required for @MainActor)
+            DispatchQueue.main.async {
+                self.playNote(noteInfo.note, octave: noteInfo.octave, velocity: velocity)
+                onNotePlayed?(index)
+            }
+            
+            // Cancel timer after last note
+            if currentIndex >= notes.count {
+                timer.cancel()
+            }
+        }
+        
+        timer.resume()
     }
     
     /// Stop all currently playing sounds

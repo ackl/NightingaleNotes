@@ -169,4 +169,61 @@ public class NotesViewModel {
             }
         }
     }
+    
+    /// Whether a scale is currently being played
+    public var isPlayingScale: Bool = false
+    
+    /// Play the current scale as a sequence
+    /// - Parameters:
+    ///   - baseOctave: The starting octave
+    ///   - ascending: Whether to play ascending (default true)
+    ///   - interval: Time between notes in seconds (default 0.2)
+    public func playScale(baseOctave: Int = 4, ascending: Bool = true, interval: TimeInterval = 0.2) {
+        let scale = settings.scaleNotes
+        guard !scale.isEmpty, !isPlayingScale else { return }
+        
+        isPlayingScale = true
+        
+        // Generate the sequence notes (handles octave wrapping properly)
+        let sequenceNotes = ScaleBuilder.generateSequenceNotes(scale: scale)
+        
+        // Convert to (Note, octave) tuples
+        var notesToPlay: [(note: Note, octave: Int)] = sequenceNotes.map { noteValue in
+            let octaveOffset = noteValue / 12
+            let note = Note(wrapping: noteValue % 12)
+            return (note, baseOctave + octaveOffset)
+        }
+        
+        // Reverse if descending
+        if !ascending {
+            notesToPlay.reverse()
+        }
+        
+        // Create PlayingNote objects for visual feedback
+        let playingNotesList = notesToPlay.map { PlayingNote(note: $0.note, octave: $0.octave) }
+        
+        // Play the sequence with visual feedback
+        AudioEngine.shared.playSequence(notesToPlay, interval: interval) { [weak self] index in
+            guard let self = self else { return }
+            
+            // Remove previous note highlight (if any)
+            if index > 0 {
+                self.playingNotes.remove(playingNotesList[index - 1])
+            }
+            
+            // Add current note highlight
+            self.playingNotes.insert(playingNotesList[index])
+        }
+        
+        // Clean up after sequence completes
+        let totalDuration = Double(notesToPlay.count) * interval + 0.4
+        Task {
+            try? await Task.sleep(for: .seconds(totalDuration))
+            // Remove the last note
+            if let lastNote = playingNotesList.last {
+                playingNotes.remove(lastNote)
+            }
+            isPlayingScale = false
+        }
+    }
 }
